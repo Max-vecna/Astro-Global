@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Astro Chat - Global Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        :root {
+            /* Cores Baseadas no Astro original */
+            --primary-color: #4f46e5;
+            --secondary-color: #7c3aed;
+            --background-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-color: #e2e8f0;
+            --text-muted-color: #94a3b8;
+            
+            /* Variáveis de Bolha inspiradas no Chat Global */
+            --bubble-self-bg: #3b82f6; 
+            --bubble-self-text: #ffffff;
+            --bubble-other-bg: #334155; 
+            --bubble-other-text: #f3f4f6;
+            
+            --app-height: 100vh;
+        }
+
+        [data-theme="light"] {
+            --primary-color: #2563eb;
+            --secondary-color: #8b5cf6;
+            --background-color: #f3f4f6;
+            --surface-color: #ffffff;
+            --text-color: #1f2937;
+            --text-muted-color: #6b7280;
+            
+            --bubble-self-bg: #3b82f6;
+            --bubble-self-text: #ffffff;
+            --bubble-other-bg: #e5e7eb;
+            --bubble-other-text: #1f2937;
+        }
+
+        @keyframes stars {
+            from { background-position: 0 0; }
+            to { background-position: -10000px 5000px; }
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            overscroll-behavior: none;
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            animation: stars 180s linear infinite;
+            height: var(--app-height);
+            transition: background-color 0.3s, color 0.3s;
+            overflow: hidden;
+        }
+        
+        /* Scrollbar */
+        .scroll-container::-webkit-scrollbar { width: 4px; }
+        .scroll-container::-webkit-scrollbar-track { background: transparent; }
+        .scroll-container::-webkit-scrollbar-thumb { background-color: var(--secondary-color); border-radius: 20px; }
+
+        /* Glassmorphism */
+        .glassmorphism {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        [data-theme="light"] .glassmorphism {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- ESTILOS DE BALÃO CHAT GLOBAL --- */
+        .message-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .chat-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            line-height: 1.5;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            max-width: 85%;
+            width: fit-content;
+            cursor: pointer; /* Indica que é clicável para menu */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .items-end .chat-bubble {
+            background-color: var(--bubble-self-bg);
+            color: var(--bubble-self-text);
+            border-bottom-right-radius: 4px;
+            margin-left: auto;
+        }
+
+        .items-start .chat-bubble {
+            background-color: var(--bubble-other-bg);
+            color: var(--bubble-other-text);
+            border-bottom-left-radius: 4px;
+            margin-right: auto;
+        }
+
+        .selectable-text {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        
+        /* --- ESTILOS DE TRADUÇÃO NOS BALÕES --- */
+        .translated-text {
+            font-weight: 500;
+            margin-bottom: 4px;
+            min-height: 1.2em;
+        }
+        
+        .original-text {
+            font-size: 0.85em;
+            opacity: 0.75;
+            padding-top: 4px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            font-style: italic;
+            margin-top: 2px;
+        }
+        /* Ajuste para tema light na borda */
+        [data-theme="light"] .original-text {
+            border-top-color: rgba(0,0,0,0.1);
+        }
+
+        /* MENU DE OPÇÕES (Estilo Chat Global) */
+        .options-menu {
+            position: fixed; 
+            background: var(--surface-color);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            padding: 6px;
+            display: none; 
+            flex-direction: column;
+            z-index: 9999; 
+            min-width: 180px;
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: menuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes menuFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(-5px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .options-menu.show { display: flex; }
+
+        .options-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+            font-size: 0.9rem; font-weight: 500; color: var(--text-color); cursor: pointer; border-radius: 10px;
+            transition: background 0.1s;
+        }
+        .options-item:hover { background: rgba(255,255,255,0.1); }
+        .options-item i { width: 18px; text-align: center; }
+        
+        /* Cores dos ícones do menu */
+        .opt-translate i { color: #f59e0b; }
+        .opt-context i { color: #10b981; }
+        .opt-study i { color: #8b5cf6; }
+        .opt-vars i { color: #3b82f6; }
+
+        /* MODAL DE ESTUDO (Tokens) */
+        .word-token {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: inline-block;
+            margin: 0 2px;
+            border-bottom: 2px solid transparent;
+        }
+        .word-token:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border-bottom-color: #3b82f6;
+        }
+        .word-token.selected {
+            background-color: #ec4899;
+            color: white;
+            transform: scale(1.1);
+            font-weight: 600;
+            border-bottom: none;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        /* Loading Spinner */
+        .splash-loader {
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Botão Mágico (Reescrever) */
+        #rewrite-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+        }
+        .magic-pulse { animation: magicPulse 1.5s infinite; }
+        @keyframes magicPulse {
+            0% { box-shadow: 0 0 0 0 rgba(217, 70, 239, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(217, 70, 239, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 70, 239, 0); }
+        }
+
+        /* Toasts */
+        .toast {
+            background-color: var(--surface-color);
+            color: var(--text-color);
+            padding: 12px 20px;
+            border-radius: 99px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: fadeInOutTop 4s forwards;
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000;
+        }
+        @keyframes fadeInOutTop {
+            0% { opacity: 0; transform: translate(-50%, -20px); }
+            10% { opacity: 1; transform: translate(-50%, 0); }
+            90% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
+
+        /* Seletor de Idioma no Header */
+        #room-lang-selector {
+            background: rgba(0,0,0,0.2);
+            color: var(--text-color);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            outline: none;
+            cursor: pointer;
+        }
+        #room-lang-selector option {
+            background: var(--surface-color);
+            color: var(--text-color);
+        }
+        
+        /* Select na tela de Nickname */
+        #intro-lang-selector {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        /* Speaker Button Animation */
+        .speaker-btn:active {
+            transform: scale(0.9);
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    
+    <script>
+        const setAppHeight = () => {
+            document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+        };
+        window.addEventListener('resize', setAppHeight);
+        setAppHeight();
+    </script>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 transition-opacity duration-500">
+        <div class="flex items-center text-5xl font-bold text-slate-200 z-10">
+            <i class="fas fa-globe-americas mr-3 text-indigo-500 animate-pulse"></i>
+            <span>Astro</span>
+        </div>
+        <div class="splash-loader w-12 h-12 border-4 border-slate-700 rounded-full mt-12 z-10"></div>
+        <p class="absolute bottom-10 text-slate-500 text-center px-4 z-10">Conectando mundos e idiomas.</p>
+    </div>
+
+    <!-- App Container -->
+    <div id="app-container" class="w-full h-full flex items-center justify-center opacity-0 transition-opacity duration-500" style="height: var(--app-height);">
+        
+        <!-- Nickname Screen -->
+        <div id="nickname-screen" class="w-full max-w-sm p-6 glassmorphism rounded-2xl shadow-lg flex-col gap-5 hidden sm:max-w-md md:max-w-lg">
+             <h2 class="text-2xl font-bold text-center flex items-center justify-center gap-3"><i class="fas fa-user-astronaut text-indigo-400"></i>Identificação</h2>
+            
+            <!-- Campo Nome -->
+            <div>
+                <label for="nickname-input" class="text-sm font-medium text-muted-color">Seu Apelido</label>
+                <input type="text" id="nickname-input" placeholder="Viajante Estelar" class="w-full mt-1 p-3 bg-slate-900/50 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-center text-white">
+            </div>
+
+            <!-- Campo Idioma (Novo) -->
+            <div>
+                <label for="intro-lang-selector" class="text-sm font-medium text-muted-color">Seu Idioma Principal</label>
+                <div class="relative mt-1">
+                     <select id="intro-lang-selector" class="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-white cursor-pointer">
+                        <option value="pt">🇧🇷 Português</option>
+                        <option value="en">🇺🇸 English</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="de">🇩🇪 Deutsch</option>
+                        <option value="it">🇮🇹 Italiano</option>
+                        <option value="ja">🇯🇵 日本語</option>
+                        <option value="zh">🇨🇳 中文</option>
+                        <option value="ru">🇷🇺 Русский</option>
+                        <option value="ar">🇸🇦 العربية</option>
+                     </select>
+                     <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                </div>
+            </div>
+
+            <button id="save-nickname-btn" class="w-full bg-[var(--primary-color)] hover:opacity-90 font-bold p-3 rounded-xl transition-all text-lg text-white shadow-lg mt-2">Entrar</button>
+        </div>
+
+        <!-- Lobby Screen -->
+        <div id="lobby-screen" class="w-full h-full max-w-md flex-col hidden relative sm:max-w-lg md:max-w-2xl bg-[var(--background-color)] md:bg-transparent md:h-5/6">
+             <header class="flex items-center justify-between p-4 glassmorphism md:rounded-t-2xl z-10">
+                <h2 class="text-xl font-bold">Conversas</h2>
+                <div class="flex items-center gap-3">
+                    <p class="text-sm">Olá, <span id="lobby-nickname" class="font-bold text-[var(--primary-color)]"></span>!</p>
+                    <button id="change-nickname-btn" class="text-muted-color hover:text-text-color transition-colors"><i class="fas fa-edit"></i></button>
+                </div>
+            </header>
+            
+            <main id="room-list-container" class="flex-1 overflow-y-auto p-4 space-y-3 scroll-container md:bg-[var(--surface-color)] md:bg-opacity-90"></main>
+
+            <div class="absolute bottom-6 left-6 z-20">
+                 <button id="settings-btn" class="w-14 h-14 bg-[var(--surface-color)] hover:bg-opacity-80 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 transform hover:scale-110 border border-white/10 text-[var(--text-color)]">
+                    <i class="fas fa-cog text-xl"></i>
+                </button>
+            </div>
+
+            <div id="new-conversation-container" class="absolute bottom-6 right-6 z-20">
+                 <button id="new-conversation-btn" class="w-16 h-16 bg-[var(--primary-color)] hover:opacity-90 rounded-full flex items-center justify-center shadow-lg transition-transform duration-300 transform hover:scale-110 text-white">
+                    <i class="fas fa-plus text-2xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Screen -->
+        <div id="chat-screen" class="w-full h-full flex-col hidden bg-[var(--background-color)] md:max-w-4xl md:h-5/6 md:rounded-2xl md:shadow-2xl md:border md:border-white/5 relative">
+            <header class="flex items-center justify-between p-3 glassmorphism md:rounded-t-2xl z-10 gap-2">
+                <div class="flex items-center gap-2">
+                    <button id="leave-btn" class="p-2 rounded-full hover:bg-white/10 text-lg transition-colors text-[var(--text-color)]">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div>
+                        <div class="relative group cursor-pointer flex flex-col" id="room-code-wrapper">
+                            <h2 class="font-bold text-lg text-[var(--text-color)] leading-tight flex items-center gap-2">
+                                #<span class="room-code-value tracking-wider"></span>
+                            </h2>
+                            <p id="user-count-display" class="text-xs text-green-400 font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seletor de Idioma da Sala (AGORA PESSOAL) -->
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-language text-[var(--text-muted-color)]"></i>
+                    <select id="room-lang-selector" title="Seu idioma pessoal para tradução">
+                        <option value="pt">Português</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                        <option value="de">Deutsch</option>
+                        <option value="it">Italiano</option>
+                        <option value="ja">日本語</option>
+                        <option value="zh">中文</option>
+                        <option value="ru">Русский</option>
+                        <option value="ar">العربية</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center -space-x-2" id="user-avatars-container"></div>
+            </header>
+
+            <main id="messages-container" class="flex-1 p-4 overflow-y-auto flex flex-col scroll-container bg-[var(--surface-color)]/30">
+                <div id="messages-list" class="flex flex-col gap-1 pb-4">
+                    <div id="typing-indicator-container" class="h-8 transition-all duration-300"></div>
+                </div>
+            </main>
+
+            <footer class="p-3 glassmorphism md:rounded-b-2xl z-20">                
+                <div id="reply-preview" class="hidden mb-2 p-2 rounded-lg bg-black/20 border-l-4 border-[var(--secondary-color)]"></div>
+                
+                <div class="flex items-end gap-2">
+                    <div class="flex-1 relative">
+                        <textarea id="message-input" rows="1" placeholder="Digite uma mensagem..." class="w-full bg-[var(--surface-color)] text-[var(--text-color)] rounded-2xl py-3 px-4 outline-none focus:ring-2 focus:ring-[var(--primary-color)] border border-white/5 resize-none overflow-hidden max-h-32" style="min-height: 48px;"></textarea>
+                    </div>
+                    
+                    <!-- Botão Mágico Reescrever (Mantido) -->
+                    <button id="rewrite-btn" class="w-12 h-12 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-lg text-white mb-[2px]" title="Melhorar texto com IA">
+                        <i class="fas fa-magic"></i>
+                    </button>
+
+                    <button id="send-btn" class="bg-[var(--primary-color)] hover:opacity-90 w-12 h-12 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-lg text-white mb-[2px]">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="glassmorphism p-6 rounded-2xl max-w-sm w-full flex flex-col gap-5">
+            <div class="flex justify-between items-center">
+                 <h3 class="text-xl font-bold">Configurações</h3>
+                 <button id="close-settings-modal-btn" class="text-2xl text-muted-color hover:text-text-color">&times;</button>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-muted-color mb-3 block">Tema Visual</label>
+                <div class="flex gap-3">
+                    <button data-theme="dark" class="theme-btn flex-1 p-4 rounded-xl border-2 border-transparent bg-slate-800 text-white flex flex-col items-center gap-2 transition-all">
+                        <i class="fas fa-moon"></i> Astro
+                    </button>
+                    <button data-theme="light" class="theme-btn flex-1 p-4 rounded-xl border-2 border-transparent bg-slate-200 text-black flex flex-col items-center gap-2 transition-all">
+                        <i class="fas fa-sun"></i> Nebula
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Botão Limpar Dados (Novo) -->
+            <div class="border-t border-white/10 pt-4 mt-2">
+                <button id="clear-data-btn" class="w-full p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 flex items-center justify-center gap-2 transition-all font-bold">
+                    <i class="fas fa-trash-alt"></i> Limpar Dados / Sair
+                </button>
+                <p class="text-xs text-center text-muted-color mt-2">Isso apagará seu apelido, preferências e histórico de salas recentes.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Estudo (Novo) -->
+    <div id="study-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="glassmorphism p-0 rounded-2xl max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-[var(--primary-color)] text-white">
+                <h3 class="font-bold flex items-center gap-2"><i class="fas fa-graduation-cap"></i> Modo Estudo</h3>
+                <button id="close-study-modal" class="text-xl hover:text-white/80">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p class="text-sm text-muted-color mb-2 uppercase font-bold tracking-wider">Frase Original</p>
+                <div id="study-original-text" class="text-lg mb-6 p-4 bg-[var(--surface-color)] rounded-xl border border-white/5 leading-relaxed"></div>
+                
+                <div id="study-result-area" class="hidden">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xs font-bold px-2 py-1 rounded bg-pink-500/20 text-pink-400 border border-pink-500/30" id="word-class-badge">Classe</span>
+                        <span class="text-xs font-bold px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30" id="word-lang-badge">Idioma</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <h4 id="word-translation" class="text-xl font-bold text-[var(--secondary-color)]"></h4>
+                        <!-- Container dinâmico para o botão de fala será inserido via JS -->
+                        <div id="word-speak-container"></div>
+                    </div>
+                    
+                    <p id="word-explanation" class="text-sm text-[var(--text-color)] mb-4 leading-relaxed mt-2"></p>
+                    
+                    <div class="bg-black/20 p-3 rounded-lg border-l-2 border-[var(--primary-color)]">
+                        <p class="text-xs text-muted-color mb-1">Exemplo</p>
+                        <p id="word-example" class="italic text-sm"></p>
+                    </div>
+                </div>
+                <div id="study-loading" class="hidden py-8 flex justify-center">
+                    <div class="splash-loader w-8 h-8 border-2 border-[var(--text-color)] rounded-full"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Genérico (Resultado de Tradução/Contexto) -->
+    <div id="generic-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="glassmorphism p-6 rounded-2xl max-w-md w-full flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                 <h3 class="text-xl font-bold" id="generic-modal-title">Resultado</h3>
+                 <button id="close-generic-modal" class="text-2xl text-muted-color hover:text-text-color">&times;</button>
+            </div>
+            <div id="generic-modal-content" class="text-[var(--text-color)] leading-relaxed max-h-[60vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div id="room-actions-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="glassmorphism p-6 rounded-2xl max-w-sm w-full flex flex-col gap-5">
+            <div class="flex justify-between items-center">
+                 <h3 class="text-xl font-bold">Nova Conversa</h3>
+                 <button id="close-room-actions-modal-btn" class="text-2xl text-muted-color hover:text-text-color">&times;</button>
+            </div>
+            <button id="modal-create-room-btn" class="w-full bg-[var(--primary-color)] text-white hover:opacity-90 font-bold p-4 rounded-xl transition-all flex items-center justify-center gap-3 text-lg shadow-lg">
+                <i class="fas fa-plus-circle"></i> Criar Sala Privada
+            </button>
+            <div class="relative flex py-2 items-center"><div class="flex-grow border-t border-white/10"></div><span class="flex-shrink mx-4 text-muted-color text-sm">OU</span><div class="flex-grow border-t border-white/10"></div></div>
+            <div>
+                 <label class="text-sm font-medium text-muted-color mb-2 block">Código da Sala</label>
+                 <div class="flex gap-2">
+                    <input type="text" id="modal-room-code-input" placeholder="CÓDIGO" class="flex-1 p-3 bg-[var(--surface-color)] border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-color)] text-center uppercase tracking-widest font-bold text-white">
+                    <button id="modal-confirm-join-btn" class="bg-emerald-600 hover:bg-emerald-700 p-3 rounded-xl font-bold aspect-square flex items-center justify-center transition-colors text-white"><i class="fas fa-arrow-right"></i></button>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, set, get, onValue, onChildAdded, onChildChanged, serverTimestamp, onDisconnect, push, query, orderByKey, startAfter, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // CONFIGURAÇÃO FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxb2s4tzbtD1arG9UAf7UrzhFqbRrrsl8",
+            authDomain: "astro-642b6.firebaseapp.com",
+            databaseURL: "https://astro-642b6-default-rtdb.firebaseio.com",
+            projectId: "astro-642b6",
+            storageBucket: "astro-642b6.appspot.com",
+            messagingSenderId: "141832763492",
+            appId: "1:141832763492:web:c8f6a529849bab54ee8771"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // VARIÁVEIS GLOBAIS
+        let currentRoom, nickname, userId, presenceRef, typingTimeout, messageObserver;
+        let roomUnsubscribes = [];
+        let replyingToMessage = null;
+        let activeMessageMenu = null;
+        // Pega do localStorage ou define 'pt' como padrão se for a primeira vez
+        let currentTranslationLang = localStorage.getItem('astroUserLang') || "pt"; 
+        const userColors = {};
+        let onlineUsersInRoom = {};
+        
+        // CACHE DE TRADUÇÃO SIMPLES
+        const translationCache = {};
+
+        // ELEMENTOS DOM
+        const DOMElements = {
+            splash: document.getElementById('splash-screen'),
+            app: document.getElementById('app-container'),
+            nicknameScreen: document.getElementById('nickname-screen'),
+            lobbyScreen: document.getElementById('lobby-screen'),
+            chat: document.getElementById('chat-screen'),
+            nicknameInput: document.getElementById('nickname-input'),
+            messagesContainer: document.getElementById('messages-container'),
+            messagesList: document.getElementById('messages-list'),
+            messageInput: document.getElementById('message-input'),
+            typingIndicatorContainer: document.getElementById('typing-indicator-container'),
+            replyPreview: document.getElementById('reply-preview'),
+            roomCodeDisplay: document.querySelector('.room-code-value'),
+            userCountDisplay: document.getElementById('user-count-display'),
+            userAvatarsContainer: document.getElementById('user-avatars-container'),
+            roomListContainer: document.getElementById('room-list-container'),
+            lobbyNickname: document.getElementById('lobby-nickname'),
+            roomActionsModal: document.getElementById('room-actions-modal'),
+            modalRoomCodeInput: document.getElementById('modal-room-code-input'),
+            settingsModal: document.getElementById('settings-modal'),
+            toastContainer: document.getElementById('toast-container'),
+            rewriteBtn: document.getElementById('rewrite-btn'),
+            roomLangSelector: document.getElementById('room-lang-selector'),
+            introLangSelector: document.getElementById('intro-lang-selector'),
+            studyModal: document.getElementById('study-modal'),
+            genericModal: document.getElementById('generic-modal'),
+            clearDataBtn: document.getElementById('clear-data-btn')
+        };
+
+        const LANG_MAP = {
+            ar: "árabe", pt: "português", es: "espanhol", ja: "japonês",
+            zh: "chinês", en: "inglês", fr: "francês", de: "alemão",
+            it: "italiano", ru: "russo"
+        };
+
+        /* ========================
+           SERVICES (IA / TRANSLATION)
+           ======================== */
+        
+        async function fetchWithTimeout(url, timeout = 10000) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            try {
+                const res = await fetch(url, { signal: controller.signal });
+                clearTimeout(id);
+                return res;
+            } catch (e) {
+                clearTimeout(id);
+                throw e;
+            }
+        }
+
+        async function aiRequest(promptText, seed = true) {
+            const prompt = encodeURIComponent(promptText);
+            const url = `https://text.pollinations.ai/${prompt}${seed ? '?seed='+Math.random() : ''}`;
+            const res = await fetchWithTimeout(url);
+            if (!res.ok) throw new Error("Erro na API");
+            return await res.text();
+        }
+
+        function extractJSON(text) {
+            text = text.replace(/```json|```/g, "").trim();
+            const start = text.indexOf("{");
+            const end = text.lastIndexOf("}");
+            if (start !== -1 && end !== -1) return JSON.parse(text.slice(start, end + 1));
+            
+            // Tenta array
+            const startArr = text.indexOf("[");
+            const endArr = text.lastIndexOf("]");
+            if (startArr !== -1 && endArr !== -1) return JSON.parse(text.slice(startArr, endArr + 1));
+            throw new Error("JSON inválido");
+        }
+
+        // 1. Otimizar Texto
+        async function reescreverTexto(texto) {
+            const prompt = `
+                Aja como um assistente de escrita experiente.
+                Reescreva o texto abaixo para torná-lo mais claro, gramaticalmente correto e natural.
+                Mantenha o idioma original do texto.
+                Responda APENAS com o texto reescrito.
+                Texto: "${texto}"
+            `;
+            const result = await aiRequest(prompt);
+            return result.replace(/^"|"$/g, '').trim();
+        }
+
+        // 2. Traduzir
+        async function traduzir(texto, targetLang) {
+            const cacheKey = `${texto}_${targetLang}`;
+            if(translationCache[cacheKey]) return translationCache[cacheKey];
+
+            const idioma = LANG_MAP[targetLang] || targetLang;
+            const prompt = `Traduza o texto a seguir para ${idioma}. Produza SOMENTE a tradução. Texto: "${texto}"`;
+            
+            try {
+                const res = await aiRequest(prompt, false);
+                translationCache[cacheKey] = res;
+                return res;
+            } catch(e) {
+                return texto; // Fallback
+            }
+        }
+
+        // 3. Contexto
+        async function analisarContexto(texto, targetLang) {
+            const idioma = LANG_MAP[targetLang] || "português";
+            const prompt = `Explique de forma OBJETIVA o contexto e a intenção da frase abaixo. Responda SOMENTE em ${idioma}. Frase: "${texto}"`;
+            return await aiRequest(prompt);
+        }
+
+        // 4. Variações
+        async function gerarVariacoes(texto, targetLang) {
+            const idioma = LANG_MAP[targetLang] || "português";
+            const prompt = `Gere 3 variações DIFERENTES e naturais da tradução abaixo para ${idioma}. Responda apenas com as frases, uma por linha. Texto: "${texto}"`;
+            const txt = await aiRequest(prompt);
+            return txt.split("\n").filter(t => t.trim().length > 0);
+        }
+
+        // 5. Segmentação (Tokenização para Estudo)
+        async function segmentarTexto(texto) {
+            const prompt = `
+                Divida o texto abaixo em tokens/palavras individuais para um dicionário interativo.
+                Retorne APENAS um Array JSON de strings. Exemplo: ["Olá", ",", "mundo"]
+                Texto: "${texto}"
+            `;
+            try {
+                const res = await aiRequest(prompt);
+                return extractJSON(res);
+            } catch {
+                return texto.split(/(\s+|[.,!?;:"()]+)/).filter(t => t.trim().length > 0);
+            }
+        }
+
+        // 6. Explorar Palavra
+        async function explorarPalavra(palavra, frase, userLang) {
+            const idiomaUsuario = LANG_MAP[userLang] || "português";
+            const prompt = `
+                Aja como um professor de idiomas.
+                Analise a palavra: "${palavra}" na frase: "${frase}".
+                Retorne APENAS JSON:
+                {
+                    "traducao_contextual": "Tradução para ${idiomaUsuario}",
+                    "explicacao": "Explicação breve em ${idiomaUsuario}",
+                    "classe_gramatical": "Classe gramatical em ${idiomaUsuario}",
+                    "exemplo_uso": "Nova frase curta na língua original",
+                    "idioma_origem_iso": "Código ISO da língua original da palavra (ex: en-US, pt-BR, fr-FR)"
+                }
+            `;
+            const res = await aiRequest(prompt);
+            return extractJSON(res);
+        }
+
+        /* ========================
+           INICIALIZAÇÃO & UI
+           ======================== */
+
+        window.onload = async () => {
+            initializeUser();
+            initializeTheme();
+            
+            // Setar valor inicial do seletor do chat com o idioma salvo
+            DOMElements.roomLangSelector.value = currentTranslationLang;
+            
+            // Setar valor do seletor de introdução caso já exista algo (embora a tela não vá aparecer se tiver nick)
+            DOMElements.introLangSelector.value = currentTranslationLang;
+
+            await new Promise(res => setTimeout(res, 1200));
+            DOMElements.splash.style.opacity = 0;
+            DOMElements.app.style.opacity = 1;
+            setTimeout(() => DOMElements.splash.classList.add('hidden'), 500);
+
+            nickname = localStorage.getItem('astroNickname');
+            if (nickname) {
+                DOMElements.lobbyNickname.textContent = nickname;
+                switchScreen('lobby');
+            } else {
+                switchScreen('nickname');
+            }
+
+            // Auto-resize do textarea
+            DOMElements.messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+                if(this.value === '') this.style.height = 'auto';
+                handleTyping();
+            });
+
+            // LANGUAGE LISTENER (Chat Screen)
+            DOMElements.roomLangSelector.addEventListener('change', (e) => {
+                const newLang = e.target.value;
+                currentTranslationLang = newLang;
+                localStorage.setItem('astroUserLang', newLang);
+                showToast(`Seu idioma foi alterado para ${newLang.toUpperCase()}`, 'success');
+                retranslateAllMessages(newLang);
+            });
+        };
+
+        const switchScreen = (screen) => {
+            ['nickname', 'lobby', 'chat'].forEach(s => {
+                const el = DOMElements[s === 'chat' ? 'chat' : `${s}Screen`];
+                el.classList.toggle('hidden', s !== screen);
+                el.classList.toggle('flex', s === screen);
+            });
+            if (screen === 'lobby') renderRoomList();
+            if (screen === 'chat') onlineUsersInRoom = {};
+        };
+
+        /* ========================
+           CHAT RENDERIZAÇÃO
+           ======================== */
+
+        const renderMessage = (msgData, msgId) => {
+            if (!msgData || !msgData.text) return;
+
+            const existingMsgWrapper = DOMElements.messagesList.querySelector(`[data-msg-id="${msgId}"]`);
+            if (existingMsgWrapper) {
+                const nickEl = existingMsgWrapper.querySelector('.nickname-display');
+                if (nickEl && msgData.nickname !== nickEl.textContent) {
+                    nickEl.textContent = msgData.nickname;
+                }
+                return;
+            }
+
+            const isSelf = msgData.userId === userId;
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `message-wrapper items-${isSelf ? 'end' : 'start'}`;
+            messageWrapper.dataset.msgId = msgId;
+            messageWrapper.dataset.userId = msgData.userId;
+
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble selectable-text`;
+            
+            if (!userColors[msgData.userId]) userColors[msgData.userId] = `hsl(${Math.random() * 360}, 70%, 60%)`;
+
+            let contentHTML = '';
+            
+            if (msgData.repliedTo) {
+               contentHTML += `<div class="mb-1 pl-2 border-l-2 border-white/30 text-xs opacity-70">
+                       <strong class="block">${msgData.repliedTo.nickname}</strong>
+                       <span class="truncate block max-w-[200px]">${msgData.repliedTo.text}</span>
+                   </div>`;
+            }
+
+            if (!isSelf) {
+                contentHTML += `<div class="nickname-display text-xs font-bold mb-1 opacity-90" style="color: ${userColors[msgData.userId]};">${msgData.nickname}</div>`;
+            }
+
+            const safeText = msgData.text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, '<br>');
+            const translationId = `trans-${msgId}`;
+            
+            contentHTML += `
+                <div id="${translationId}" class="translated-text">
+                    <i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i>
+                </div>
+                <div class="original-text">${safeText}</div>
+            `;
+
+            const time = new Date(msgData.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            contentHTML += `
+                <div class="flex items-center justify-end gap-1 mt-1 opacity-60 text-[0.65rem] select-none">
+                    <span>${time}</span>
+                    ${isSelf ? '<i class="fas fa-check text-white/50"></i>' : ''}
+                </div>
+            `;
+
+            bubble.innerHTML = contentHTML;
+            messageWrapper.appendChild(bubble);
+
+            bubble.addEventListener('click', (e) => {
+                if(window.getSelection().toString().length > 0) return;
+                e.stopPropagation();
+                openActionsMenu(bubble, msgId, msgData.text);
+            });
+
+            DOMElements.messagesList.insertBefore(messageWrapper, DOMElements.typingIndicatorContainer);
+            scrollToBottom();
+
+            performTranslation(msgId, msgData.text, currentTranslationLang);
+        };
+
+        const performTranslation = async (msgId, originalText, lang) => {
+            const el = document.getElementById(`trans-${msgId}`);
+            if (!el) return;
+
+            if (!el.textContent || el.querySelector('.fa-spin')) {
+                el.innerHTML = '<i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i>';
+            }
+
+            try {
+                const translated = await traduzir(originalText, lang);
+                
+                if(translated.toLowerCase().trim() === originalText.toLowerCase().trim()) {
+                    el.textContent = translated;
+                    const origEl = el.nextElementSibling;
+                    if(origEl && origEl.classList.contains('original-text')) {
+                        origEl.style.display = 'none'; 
+                        el.style.marginBottom = '0'; 
+                    }
+                } else {
+                    el.textContent = translated;
+                    const origEl = el.nextElementSibling;
+                    if(origEl && origEl.classList.contains('original-text')) {
+                        origEl.style.display = 'block'; 
+                    }
+                }
+            } catch (err) {
+                el.style.display = 'none';
+            }
+        }
+
+        const retranslateAllMessages = (newLang) => {
+            showToast(`Traduzindo mensagens para ${newLang.toUpperCase()}...`, 'info');
+            const wrappers = document.querySelectorAll('.message-wrapper');
+            wrappers.forEach(wrapper => {
+                const msgId = wrapper.dataset.msgId;
+                const originalTextEl = wrapper.querySelector('.original-text');
+                if (originalTextEl && msgId) {
+                    performTranslation(msgId, originalTextEl.innerText, newLang);
+                }
+            });
+        };
+
+        const renderTypingIndicator = (typingUsers) => {
+            const container = DOMElements.typingIndicatorContainer;
+            container.innerHTML = '';
+            
+            Object.entries(typingUsers).forEach(([typingUserId, userData]) => {
+                if (!userData || !userData.nickname) return;
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex flex-col items-start mb-2 ml-1 animate-pulse max-w-[80%]';
+                
+                wrapper.innerHTML = `
+                    <div class="text-xs text-muted-color mb-1 ml-2">${userData.nickname} está digitando...</div>
+                    <div class="chat-bubble bg-[var(--bubble-other-bg)] text-[var(--bubble-other-text)] rounded-2xl py-2 px-4 opacity-70 italic text-sm border border-white/10">
+                        ${userData.text || '...'}
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+            
+            if (Object.keys(typingUsers).length > 0) scrollToBottom();
+        };
+
+        const scrollToBottom = () => {
+            DOMElements.messagesContainer.scrollTop = DOMElements.messagesContainer.scrollHeight;
+        }
+
+        /* ========================
+           MENUS E INTERAÇÕES
+           ======================== */
+
+        const openActionsMenu = (triggerEl, msgId, text) => {
+            if(activeMessageMenu) activeMessageMenu.remove();
+
+            const menu = document.createElement('div');
+            menu.className = 'options-menu';
+            
+            const options = [
+                { icon: 'fa-language', label: 'Traduzir', class: 'opt-translate', action: () => handleAction('translate', text) },
+                { icon: 'fa-lightbulb', label: 'Contexto', class: 'opt-context', action: () => handleAction('context', text) },
+                { icon: 'fa-graduation-cap', label: 'Estudar', class: 'opt-study', action: () => handleAction('study', text) },
+                { icon: 'fa-random', label: 'Variações', class: 'opt-vars', action: () => handleAction('variations', text) },
+                { icon: 'fa-copy', label: 'Copiar', class: '', action: () => { navigator.clipboard.writeText(text); showToast('Copiado!'); } }
+            ];
+
+            options.forEach(opt => {
+                const item = document.createElement('div');
+                item.className = `options-item ${opt.class || ''}`;
+                item.innerHTML = `<i class="fas ${opt.icon}"></i> ${opt.label}`;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    opt.action();
+                    menu.remove();
+                    activeMessageMenu = null;
+                };
+                menu.appendChild(item);
+            });
+
+            document.body.appendChild(menu);
+            menu.classList.add('show'); 
+            activeMessageMenu = menu;
+
+            const rect = triggerEl.getBoundingClientRect();
+            const menuRect = menu.getBoundingClientRect();
+            
+            let top = rect.bottom + 5;
+            let left = rect.left;
+
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            if (top + menuRect.height > viewportHeight) {
+                top = rect.top - menuRect.height - 5;
+            }
+
+            if (left + menuRect.width > viewportWidth - 10) {
+                left = viewportWidth - menuRect.width - 10;
+            }
+            left = Math.max(10, left);
+
+            menu.style.top = top + 'px';
+            menu.style.left = left + 'px';
+
+            const closeMenu = (e) => {
+                if(!menu.contains(e.target)) {
+                    menu.remove();
+                    activeMessageMenu = null;
+                    document.removeEventListener('click', closeMenu);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', closeMenu), 100);
+        };
+
+        async function handleAction(type, text) {
+            const targetLang = currentTranslationLang; 
+            showToast("Processando com IA...", "info");
+
+            try {
+                if (type === 'translate') {
+                    const trad = await traduzir(text, targetLang);
+                    showGenericModal(`Tradução (${targetLang})`, trad);
+                } else if (type === 'context') {
+                    const ctx = await analisarContexto(text, targetLang);
+                    showGenericModal('Contexto & Intenção', ctx);
+                } else if (type === 'variations') {
+                    const vars = await gerarVariacoes(text, targetLang);
+                    showGenericModal('Variações', vars.map(v => `• ${v}`).join('<br><br>'));
+                } else if (type === 'study') {
+                    openStudyModal(text);
+                }
+            } catch (e) {
+                console.error(e);
+                showToast("Erro ao processar solicitação IA.", "error");
+            }
+        }
+
+        /* ========================
+           MODAIS
+           ======================== */
+
+        function showGenericModal(title, content) {
+            document.getElementById('generic-modal-title').textContent = title;
+            document.getElementById('generic-modal-content').innerHTML = content;
+            DOMElements.genericModal.classList.remove('hidden');
+            DOMElements.genericModal.classList.add('flex');
+        }
+
+        async function openStudyModal(text) {
+            DOMElements.studyModal.classList.remove('hidden');
+            DOMElements.studyModal.classList.add('flex');
+            
+            const originalArea = document.getElementById('study-original-text');
+            originalArea.innerHTML = '<span class="text-sm opacity-50">Carregando tokens...</span>';
+            document.getElementById('study-result-area').classList.add('hidden');
+
+            try {
+                const tokens = await segmentarTexto(text);
+                originalArea.innerHTML = '';
+                tokens.forEach(token => {
+                    const span = document.createElement('span');
+                    span.textContent = token;
+                    span.className = 'word-token';
+                    span.onclick = () => selectToken(span, token, text);
+                    originalArea.appendChild(span);
+                });
+            } catch (e) {
+                originalArea.textContent = text;
+            }
+        }
+
+        async function selectToken(el, token, contextPhrase) {
+            document.querySelectorAll('.word-token').forEach(t => t.classList.remove('selected'));
+            el.classList.add('selected');
+
+            document.getElementById('study-loading').classList.remove('hidden');
+            document.getElementById('study-result-area').classList.add('hidden');
+
+            try {
+                const data = await explorarPalavra(token, contextPhrase, currentTranslationLang);
+
+                document.getElementById('word-translation').textContent = data.traducao_contextual;
+                
+                const speakContainer = document.getElementById('word-speak-container');
+                speakContainer.innerHTML = ''; 
+                
+                const btn = document.createElement('button');
+                btn.className = "speaker-btn bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all text-white";
+                btn.innerHTML = '<i class="fas fa-volume-high"></i>';
+                btn.title = "Ouvir pronúncia";
+                
+                const speakLang = data.idioma_origem_iso || 'en-US';
+                
+                btn.onclick = () => {
+                    const utterance = new SpeechSynthesisUtterance(token);
+                    utterance.lang = speakLang;
+                    window.speechSynthesis.speak(utterance);
+                };
+                speakContainer.appendChild(btn);
+
+                document.getElementById('word-explanation').textContent = data.explicacao;
+                document.getElementById('word-example').textContent = `"${data.exemplo_uso}"`;
+                
+                document.getElementById('word-class-badge').textContent = data.classe_gramatical;
+                document.getElementById('word-lang-badge').textContent = (data.idioma_origem_iso || 'unk').toUpperCase();
+
+                document.getElementById('study-loading').classList.add('hidden');
+                document.getElementById('study-result-area').classList.remove('hidden');
+            } catch (e) {
+                showToast("Erro ao analisar palavra.", "error");
+                document.getElementById('study-loading').classList.add('hidden');
+            }
+        }
+
+        document.getElementById('close-study-modal').onclick = () => {
+            DOMElements.studyModal.classList.add('hidden');
+            DOMElements.studyModal.classList.remove('flex');
+        };
+        document.getElementById('close-generic-modal').onclick = () => {
+            DOMElements.genericModal.classList.add('hidden');
+            DOMElements.genericModal.classList.remove('flex');
+        };
+
+        /* ========================
+           LÓGICA DO APP
+           ======================== */
+
+        DOMElements.rewriteBtn.addEventListener('click', async () => {
+            const input = DOMElements.messageInput;
+            const originalText = input.value.trim();
+            
+            if (!originalText) {
+                showToast("Digite algo para a mágica acontecer!", "info");
+                return;
+            }
+
+            const btnIcon = DOMElements.rewriteBtn.querySelector('i');
+            btnIcon.className = "fas fa-spinner fa-spin";
+            DOMElements.rewriteBtn.classList.add('magic-pulse');
+            input.disabled = true;
+            input.style.opacity = "0.7";
+
+            try {
+                const typingRef = ref(db, `typing/${currentRoom}/${userId}`);
+                set(typingRef, { nickname, text: "✨ Melhorando texto..." });
+
+                const novoTexto = await reescreverTexto(originalText);
+                input.value = novoTexto;
+                input.focus();
+                showToast("Texto melhorado!", "success");
+
+            } catch (error) {
+                showToast("A magia falhou temporariamente.", "error");
+            } finally {
+                input.disabled = false;
+                input.style.opacity = "1";
+                btnIcon.className = "fas fa-magic";
+                DOMElements.rewriteBtn.classList.remove('magic-pulse');
+                handleTyping(); 
+            }
+        });
+
+        const sendMessage = () => {
+            const text = DOMElements.messageInput.value.trim();
+            if (!text || !currentRoom) return;
+            
+            const newMessage = {
+                userId, nickname, text, 
+                timestamp: serverTimestamp(),
+            };
+            if(replyingToMessage) newMessage.repliedTo = replyingToMessage;
+            
+            push(ref(db, `messages/${currentRoom}`), newMessage);
+            DOMElements.messageInput.value = '';
+            DOMElements.messageInput.style.height = 'auto';
+            handleTyping();
+        };
+
+        const handleTyping = () => {
+            const typingRef = ref(db, `typing/${currentRoom}/${userId}`);
+            const text = DOMElements.messageInput.value;
+            if (text) {
+                set(typingRef, { nickname, text: text.substring(0, 60) });
+                if (typingTimeout) clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => set(typingRef, null), 3000);
+            } else {
+                set(typingRef, null);
+            }
+        };
+
+        async function updateNicknameHistory(newNickname) {
+            if (!userId) return;
+            
+            const recentRooms = JSON.parse(localStorage.getItem("recentRooms") || "[]");
+            if (recentRooms.length === 0) return;
+
+            showToast("Atualizando histórico de mensagens...", "info");
+
+            for (const roomCode of recentRooms) {
+                try {
+                    const msgsRef = ref(db, `messages/${roomCode}`);
+                    const snapshot = await get(msgsRef);
+                    
+                    if (snapshot.exists()) {
+                        const updates = {};
+                        snapshot.forEach((childSnap) => {
+                            const msg = childSnap.val();
+                            if (msg.userId === userId && msg.nickname !== newNickname) {
+                                updates[`${childSnap.key}/nickname`] = newNickname;
+                            }
+                        });
+
+                        if (Object.keys(updates).length > 0) {
+                            await update(msgsRef, updates);
+                        }
+                    }
+                } catch(e) {
+                    console.error(`Erro ao atualizar sala ${roomCode}:`, e);
+                }
+            }
+            showToast("Histórico atualizado!", "success");
+        }
+
+        const joinRoom = async (roomCode) => {
+            await cleanupRoomListeners();
+            if (!roomCode) return;
+            
+            currentRoom = roomCode;
+            updateRecentRooms(roomCode);
+
+            switchScreen('chat');
+            DOMElements.roomCodeDisplay.textContent = roomCode;
+            DOMElements.messagesList.innerHTML = '';
+            DOMElements.messagesList.appendChild(DOMElements.typingIndicatorContainer);
+            
+            initializePresence();
+            
+            const messagesRef = query(ref(db, `messages/${currentRoom}`), orderByKey());
+            const unsubMessages = onChildAdded(messagesRef, s => renderMessage(s.val(), s.key));
+            const unsubChanged = onChildChanged(messagesRef, s => renderMessage(s.val(), s.key));
+            
+            const unsubPresence = onValue(ref(db, `presence/${currentRoom}`), snapshot => {
+                const data = snapshot.val() || {};
+                onlineUsersInRoom = data;
+                updatePresenceUI(data);
+            });
+            
+            const unsubTyping = onValue(ref(db, `typing/${currentRoom}`), snapshot => {
+                const typingUsers = snapshot.val() || {};
+                delete typingUsers[userId];
+                renderTypingIndicator(typingUsers);
+            });
+
+            roomUnsubscribes.push(unsubPresence, unsubTyping, unsubMessages, unsubChanged);
+        };
+
+        const updatePresenceUI = (users) => {
+            const online = Object.entries(users).filter(([, u]) => u && u.isOnline);
+            DOMElements.userCountDisplay.textContent = `${online.length} online`;
+            
+            const container = DOMElements.userAvatarsContainer;
+            container.innerHTML = '';
+            online.slice(0, 4).forEach(([id, user]) => {
+                if (!user.nickname) return;
+                const div = document.createElement('div');
+                div.className = "w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-[var(--surface-color)] shadow-sm";
+                div.style.backgroundColor = userColors[id] || '#666';
+                div.textContent = user.nickname.charAt(0).toUpperCase();
+                container.appendChild(div);
+            });
+        };
+
+        const cleanupRoomListeners = async () => {
+            if (presenceRef) await set(presenceRef, null);
+            roomUnsubscribes.forEach(unsub => unsub());
+            roomUnsubscribes = [];
+        };
+
+        const leaveRoom = async () => {
+            await cleanupRoomListeners();
+            currentRoom = null;
+            switchScreen('lobby');
+        };
+
+        /* ========================
+           SYSTEM UTIL
+           ======================== */
+
+        const initializeUser = () => {
+            let storedUserId = localStorage.getItem('astroUserId');
+            if (!storedUserId) {
+                storedUserId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+                localStorage.setItem('astroUserId', storedUserId);
+            }
+            userId = storedUserId;
+        };
+
+        const initializeTheme = () => {
+            const savedTheme = localStorage.getItem('astroTheme') || 'dark';
+            document.body.dataset.theme = savedTheme;
+            updateThemeButtons(savedTheme);
+        };
+
+        const updateThemeButtons = (theme) => {
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                if(btn.dataset.theme === theme) btn.classList.add('ring-2', 'ring-[var(--primary-color)]');
+                else btn.classList.remove('ring-2', 'ring-[var(--primary-color)]');
+            });
+        }
+
+        const initializePresence = () => {
+            presenceRef = ref(db, `presence/${currentRoom}/${userId}`);
+            set(presenceRef, { nickname, isOnline: true });
+            onDisconnect(presenceRef).update({ isOnline: false });
+        };
+
+        const renderRoomList = () => {
+            const list = DOMElements.roomListContainer;
+            list.innerHTML = '';
+            const allRooms = JSON.parse(localStorage.getItem("recentRooms") || "[]");
+
+            if (allRooms.length === 0) {
+                list.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-muted-color opacity-50 mt-10"><i class="fas fa-wind text-4xl mb-2"></i><p>Nenhuma sala recente.</p></div>`;
+                return;
+            }
+
+            allRooms.forEach(roomCode => {
+                const el = document.createElement('div');
+                el.className = "flex items-center p-4 bg-[var(--surface-color)] rounded-xl cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 mb-2";
+                el.innerHTML = `
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md mr-3">
+                        <i class="fas fa-hashtag"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-[var(--text-color)]">#${roomCode}</h3>
+                        <p class="text-xs text-muted-color">Clique para entrar</p>
+                    </div>
+                    <button class="del-room w-8 h-8 rounded-full hover:text-red-500"><i class="fas fa-trash"></i></button>
+                `;
+                el.onclick = (e) => {
+                    if (e.target.closest('.del-room')) {
+                        e.stopPropagation();
+                        const n = allRooms.filter(r => r !== roomCode);
+                        localStorage.setItem("recentRooms", JSON.stringify(n));
+                        renderRoomList();
+                    } else joinRoom(roomCode);
+                };
+                list.appendChild(el);
+            });
+        };
+
+        const updateRecentRooms = (roomCode) => {
+            let recent = JSON.parse(localStorage.getItem("recentRooms") || "[]").filter(r => r !== roomCode);
+            recent.unshift(roomCode);
+            localStorage.setItem("recentRooms", JSON.stringify(recent.slice(0, 10)));
+        };
+
+        const showToast = (msg, type='info') => {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            let icon = type === 'success' ? 'fa-check-circle text-green-400' : 'fa-info-circle';
+            toast.innerHTML = `<i class="fas ${icon}"></i><span>${msg}</span>`;
+            DOMElements.toastContainer.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        };
+
+        // Eventos DOM
+        document.getElementById('save-nickname-btn').onclick = async () => {
+            const val = DOMElements.nicknameInput.value.trim();
+            const langVal = DOMElements.introLangSelector.value;
+
+            if(val) { 
+                await updateNicknameHistory(val);
+                localStorage.setItem('astroNickname', val);
+                
+                // Salva idioma escolhido
+                localStorage.setItem('astroUserLang', langVal);
+                currentTranslationLang = langVal;
+                DOMElements.roomLangSelector.value = langVal;
+
+                location.reload(); 
+            }
+        };
+
+        document.getElementById('change-nickname-btn').onclick = () => {
+            localStorage.removeItem('astroNickname'); location.reload();
+        };
+
+        // NOVO: Limpar Dados
+        DOMElements.clearDataBtn.onclick = () => {
+            if(confirm('Tem certeza? Todos os dados salvos neste navegador serão perdidos.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        };
+
+        document.getElementById('new-conversation-btn').onclick = () => {
+            DOMElements.roomActionsModal.classList.remove('hidden'); DOMElements.roomActionsModal.classList.add('flex');
+        };
+        document.getElementById('close-room-actions-modal-btn').onclick = () => {
+            DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex');
+        };
+        document.getElementById('modal-create-room-btn').onclick = () => {
+            const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+            updateRecentRooms(code); joinRoom(code);
+            DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex');
+            navigator.clipboard.writeText(code);
+        };
+        document.getElementById('modal-confirm-join-btn').onclick = () => {
+            const code = DOMElements.modalRoomCodeInput.value.trim().toUpperCase();
+            if(code) { joinRoom(code); DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); }
+        };
+        document.getElementById('settings-btn').onclick = () => {
+            DOMElements.settingsModal.classList.remove('hidden'); DOMElements.settingsModal.classList.add('flex');
+        };
+        document.getElementById('close-settings-modal-btn').onclick = () => {
+            DOMElements.settingsModal.classList.add('hidden'); DOMElements.settingsModal.classList.remove('flex');
+        };
+        document.querySelectorAll('.theme-btn').forEach(btn => btn.onclick = () => {
+            localStorage.setItem('astroTheme', btn.dataset.theme); location.reload();
+        });
+        document.getElementById('send-btn').onclick = sendMessage;
+        document.getElementById('message-input').onkeydown = (e) => {
+            if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        };
+        document.getElementById('leave-btn').onclick = leaveRoom;
+        document.querySelector('.room-code-value').onclick = () => {
+            navigator.clipboard.writeText(currentRoom); showToast("Código copiado!");
+        };
+    </script>
+</body>
+</html>
