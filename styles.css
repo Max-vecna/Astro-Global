@@ -1,0 +1,425 @@
+  :root {
+            /* Cores Baseadas no Astro original */
+            --primary-color: #4f46e5;
+            --secondary-color: #7c3aed;
+            --background-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-color: #e2e8f0;
+            --text-muted-color: #94a3b8;
+            
+            /* Variáveis de Bolha inspiradas no Chat Global */
+            --bubble-self-bg: #3b82f6; 
+            --bubble-self-text: #ffffff;
+            --bubble-other-bg: #334155; 
+            --bubble-other-text: #f3f4f6;
+            
+            --app-height: 100vh;
+        }
+
+/* --- SISTEMA DE ESTILOS DE BALÃO --- */
+        
+        /* 1. Astro Original (Padrão) */
+        body[data-bubble-style="astro"] .items-end .chat-bubble {
+            border-radius: 18px; border-bottom-right-radius: 4px;
+        }
+        body[data-bubble-style="astro"] .items-start .chat-bubble {
+            border-radius: 18px; border-bottom-left-radius: 4px;
+        }
+
+        /* 2. Moderno (Round) */
+        body[data-bubble-style="modern"] .items-end .chat-bubble {
+            background-color: #0ea5e9; /* Sky Blue */
+            color: white;
+            border-radius: 20px; border-bottom-right-radius: 4px;
+        }
+        body[data-bubble-style="modern"] .items-start .chat-bubble {
+            background-color: #334155;
+            color: #f1f5f9;
+            border-radius: 20px; border-bottom-left-radius: 4px;
+        }
+        [data-theme="light"] body[data-bubble-style="modern"] .items-start .chat-bubble {
+            background-color: #e2e8f0; color: #1e293b;
+        }
+
+        /* 3. Cyberpunk */
+        body[data-bubble-style="cyber"] .chat-bubble {
+            font-family: 'Courier New', monospace;
+            letter-spacing: -0.5px;
+            background: rgba(0,0,0,0.6) !important;
+            border-width: 1px;
+            border-style: solid;
+            box-shadow: 0 0 10px rgba(0,0,0,0.4);
+            border-radius: 4px !important;
+            backdrop-filter: blur(4px);
+        }
+        body[data-bubble-style="cyber"] .items-end .chat-bubble {
+            border-color: #10b981; color: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+        }
+        body[data-bubble-style="cyber"] .items-start .chat-bubble {
+            border-color: #ec4899; color: #ec4899;
+            box-shadow: 0 0 8px rgba(236, 72, 153, 0.3);
+        }
+
+        /* 4. Clássico (WhatsApp Style) */
+        body[data-bubble-style="classic"] .chat-bubble {
+            overflow: visible; 
+            border-radius: 8px;
+        }
+        body[data-bubble-style="classic"] .items-end .chat-bubble {
+            background-color: #059669; color: white; margin-right: 8px;
+        }
+        body[data-bubble-style="classic"] .items-start .chat-bubble {
+            background-color: #334155; color: white; margin-left: 8px;
+        }
+        [data-theme="light"] body[data-bubble-style="classic"] .items-start .chat-bubble {
+            background-color: white; color: black; border: 1px solid #e2e8f0;
+        }
+        /* As setinhas (Pseudo-elementos) */
+        body[data-bubble-style="classic"] .items-end .chat-bubble::after {
+            content: ''; position: absolute; top: 0; right: -8px; width: 0; height: 0;
+            border-top: 10px solid #059669; border-right: 18px solid transparent;
+        }
+        body[data-bubble-style="classic"] .items-start .chat-bubble::before {
+            content: ''; position: absolute; top: 0; left: -8px; width: 0; height: 0;
+            border-top: 10px solid #334155; border-left: 18px solid transparent;
+        }
+        [data-theme="light"] body[data-bubble-style="classic"] .items-start .chat-bubble::before {
+            border-top-color: white;
+        }
+
+        /* 5. Soft / Minimalista */
+        body[data-bubble-style="soft"] .items-end .chat-bubble {
+            background-color: #6366f1; color: white;
+            border-radius: 24px 24px 4px 24px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        body[data-bubble-style="soft"] .items-start .chat-bubble {
+            background-color: var(--surface-color); color: var(--text-color);
+            border-radius: 24px 24px 24px 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* 6. Comic / Pop */
+        body[data-bubble-style="comic"] .chat-bubble {
+            font-weight: bold; border: 2px solid black; border-radius: 12px;
+            box-shadow: 3px 3px 0px black; transform: translateY(-2px);
+        }
+        body[data-bubble-style="comic"] .items-end .chat-bubble {
+            background-color: #fbbf24; color: black;
+        }
+        body[data-bubble-style="comic"] .items-start .chat-bubble {
+            background-color: white; color: black;
+        }
+        body[data-bubble-style="comic"] .original-text {
+            border-top-color: rgba(0,0,0,0.2); font-style: normal; font-size: 0.8rem;
+        }
+
+        /* 7. Neon (Novo) */
+        body[data-bubble-style="neon"] .chat-bubble {
+            background: rgba(0,0,0,0.8) !important;
+            border: 1px solid;
+            border-radius: 12px !important;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        body[data-bubble-style="neon"] .items-end .chat-bubble {
+            border-color: #0ff; color: #0ff;
+            box-shadow: 0 0 10px #0ff, inset 0 0 5px #0ff;
+            text-shadow: 0 0 2px #0ff;
+        }
+        body[data-bubble-style="neon"] .items-start .chat-bubble {
+            border-color: #f0f; color: #f0f;
+            box-shadow: 0 0 10px #f0f, inset 0 0 5px #f0f;
+            text-shadow: 0 0 2px #f0f;
+        }
+
+        /* 8. Pixel / Retro (Novo) */
+        body[data-bubble-style="pixel"] .chat-bubble {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.65rem;
+            line-height: 1.6;
+            border-radius: 0 !important;
+            border: 2px solid white;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+        }
+        body[data-bubble-style="pixel"] .items-end .chat-bubble {
+            background-color: #4ade80; color: black; border-color: black;
+        }
+        body[data-bubble-style="pixel"] .items-start .chat-bubble {
+            background-color: #f87171; color: white; border-color: white;
+        }
+
+        .message-meta {
+            font-size: 0.65rem;
+            opacity: 0.6;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            user-select: none;
+        }
+
+        .meta-self {
+            justify-content: flex-end;
+            padding-right: 6px;
+        }
+
+        .meta-other {
+            justify-content: flex-start;
+            padding-left: 6px;
+        }
+
+        .message-time {
+            white-space: nowrap;
+        }
+
+        [data-theme="light"] {
+            --primary-color: #2563eb;
+            --secondary-color: #8b5cf6;
+            --background-color: #f3f4f6;
+            --surface-color: #ffffff;
+            --text-color: #1f2937;
+            --text-muted-color: #6b7280;
+            
+            --bubble-self-bg: #3b82f6;
+            --bubble-self-text: #ffffff;
+            --bubble-other-bg: #e5e7eb;
+            --bubble-other-text: #1f2937;
+        }
+
+        /* --- SISTEMA DE FUNDOS --- */
+        
+        @keyframes stars {
+            from { background-position: 0 0; }
+            to { background-position: -10000px 5000px; }
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            overscroll-behavior: none;
+            height: var(--app-height);
+            transition: background-color 0.3s, color 0.3s;
+            overflow: hidden;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        /* Background: Cosmos (Original) */
+        body[data-bg-style="cosmos"] {
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            animation: stars 180s linear infinite;
+        }
+
+        /* Background: Deep Space (Sólido/Clean) */
+        body[data-bg-style="deep"] {
+            background-color: #020617;
+            background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #020617 100%);
+            animation: none;
+        }
+
+        /* Background: Sunset (Gradient) */
+        body[data-bg-style="sunset"] {
+            background: linear-gradient(to bottom right, #4c1d95, #be185d, #fb923c);
+            animation: none;
+        }
+
+        /* Background: Matrix (Cyber Grid) */
+        body[data-bg-style="matrix"] {
+            background-color: #000;
+            background-image: 
+                linear-gradient(rgba(0, 255, 70, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 70, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: none;
+        }
+        
+        /* Scrollbar */
+        .scroll-container::-webkit-scrollbar { width: 4px; }
+        .scroll-container::-webkit-scrollbar-track { background: transparent; }
+        .scroll-container::-webkit-scrollbar-thumb { background-color: var(--secondary-color); border-radius: 20px; }
+
+        /* Glassmorphism */
+        .glassmorphism {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        [data-theme="light"] .glassmorphism {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- ESTILOS DE BALÃO CHAT GLOBAL --- */
+        .message-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 8px;
+            position: relative;
+            align-items: center;
+            flex-direction: row;
+        }
+
+        .message-wrapper.items-end
+        {
+            justify-content: flex-end;
+        }
+
+        .chat-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            line-height: 1.5;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            max-width: 85%;
+            width: fit-content;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .items-end .chat-bubble {
+            background-color: var(--bubble-self-bg);
+            color: var(--bubble-self-text);
+            border-bottom-right-radius: 4px;
+            margin-left: 0;
+        }
+
+        .items-start .chat-bubble {
+            background-color: var(--bubble-other-bg);
+            color: var(--bubble-other-text);
+            border-bottom-left-radius: 4px;
+            margin-right: 0;
+        }
+
+        .selectable-text {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        
+        .translated-text {
+            font-weight: 500;
+            margin-bottom: 4px;
+            min-height: 1.2em;
+        }
+        
+        .original-text {
+            font-size: 0.85em;
+            opacity: 0.75;
+            padding-top: 4px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            font-style: italic;
+            margin-top: 2px;
+        }
+        [data-theme="light"] .original-text {
+            border-top-color: rgba(0,0,0,0.1);
+        }
+
+        /* MENU DE OPÇÕES */
+        .options-menu {
+            position: fixed; 
+            background: var(--surface-color);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            padding: 6px;
+            display: none; 
+            flex-direction: column;
+            z-index: 9999; 
+            min-width: 180px;
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: menuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes menuFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(-5px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .options-menu.show { display: flex; }
+
+        .options-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+            font-size: 0.9rem; font-weight: 500; color: var(--text-color); cursor: pointer; border-radius: 10px;
+            transition: background 0.1s;
+        }
+        .options-item:hover { background: rgba(255,255,255,0.1); }
+        .options-item i { width: 18px; text-align: center; }
+        
+        .opt-translate i { color: #f59e0b; }
+        .opt-context i { color: #10b981; }
+        .opt-study i { color: #8b5cf6; }
+        .opt-vars i { color: #3b82f6; }
+
+        /* MODAL DE ESTUDO */
+        .word-token {
+            cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: all 0.2s;
+            display: inline-block; margin: 0 2px; border-bottom: 2px solid transparent;
+        }
+        .word-token:hover {
+            background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border-bottom-color: #3b82f6;
+        }
+        .word-token.selected {
+            background-color: #ec4899; color: white; transform: scale(1.1); font-weight: 600;
+            border-bottom: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        /* Loading Spinner */
+        .splash-loader {
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Botão Mágico */
+        #rewrite-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+        }
+        .magic-pulse { animation: magicPulse 1.5s infinite; }
+        @keyframes magicPulse {
+            0% { box-shadow: 0 0 0 0 rgba(217, 70, 239, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(217, 70, 239, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 70, 239, 0); }
+        }
+
+        /* Toasts */
+        .toast {
+            background-color: var(--surface-color);
+            color: var(--text-color);
+            padding: 12px 20px;
+            border-radius: 99px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: fadeInOutTop 4s forwards;
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000;
+        }
+        @keyframes fadeInOutTop {
+            0% { opacity: 0; transform: translate(-50%, -20px); }
+            10% { opacity: 1; transform: translate(-50%, 0); }
+            90% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
+
+        #room-lang-selector {
+            background: rgba(0,0,0,0.2); color: var(--text-color);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+            padding: 4px 8px; font-size: 0.8rem; outline: none; cursor: pointer;
+        }
+        #room-lang-selector option {
+            background: var(--surface-color); color: var(--text-color);
+        }
+        #intro-lang-selector { appearance: none; -webkit-appearance: none; -moz-appearance: none; }
+        .speaker-btn:active { transform: scale(0.9); }
+        #notif-btn svg { transition: all 0.3s ease; }
+        #notif-btn:hover svg { transform: scale(1.1) rotate(10deg); }
+
+        /* PREVIEW AREA STYLES */
+        .preview-area {
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Padrão */
+            background-color: var(--background-color);
+        }
