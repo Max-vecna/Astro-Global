@@ -4,8 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Astro Chat - Global Edition</title>
+    
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2554/2554978.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- Fonte Pixelada para o estilo Retro -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
     <style>
         :root {
             /* Cores Baseadas no Astro original */
@@ -25,6 +35,140 @@
             --app-height: 100vh;
         }
 
+/* --- SISTEMA DE ESTILOS DE BALÃO --- */
+        
+        /* 1. Astro Original (Padrão) */
+        body[data-bubble-style="astro"] .items-end .chat-bubble {
+            border-radius: 18px; border-bottom-right-radius: 4px;
+        }
+        body[data-bubble-style="astro"] .items-start .chat-bubble {
+            border-radius: 18px; border-bottom-left-radius: 4px;
+        }
+
+        /* 2. Moderno (Round) */
+        body[data-bubble-style="modern"] .items-end .chat-bubble {
+            background-color: #0ea5e9; /* Sky Blue */
+            color: white;
+            border-radius: 20px; border-bottom-right-radius: 4px;
+        }
+        body[data-bubble-style="modern"] .items-start .chat-bubble {
+            background-color: #334155;
+            color: #f1f5f9;
+            border-radius: 20px; border-bottom-left-radius: 4px;
+        }
+        [data-theme="light"] body[data-bubble-style="modern"] .items-start .chat-bubble {
+            background-color: #e2e8f0; color: #1e293b;
+        }
+
+        /* 3. Cyberpunk */
+        body[data-bubble-style="cyber"] .chat-bubble {
+            font-family: 'Courier New', monospace;
+            letter-spacing: -0.5px;
+            background: rgba(0,0,0,0.6) !important;
+            border-width: 1px;
+            border-style: solid;
+            box-shadow: 0 0 10px rgba(0,0,0,0.4);
+            border-radius: 4px !important;
+            backdrop-filter: blur(4px);
+        }
+        body[data-bubble-style="cyber"] .items-end .chat-bubble {
+            border-color: #10b981; color: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+        }
+        body[data-bubble-style="cyber"] .items-start .chat-bubble {
+            border-color: #ec4899; color: #ec4899;
+            box-shadow: 0 0 8px rgba(236, 72, 153, 0.3);
+        }
+
+        /* 4. Clássico (WhatsApp Style) */
+        body[data-bubble-style="classic"] .chat-bubble {
+            overflow: visible; 
+            border-radius: 8px;
+        }
+        body[data-bubble-style="classic"] .items-end .chat-bubble {
+            background-color: #059669; color: white; margin-right: 8px;
+        }
+        body[data-bubble-style="classic"] .items-start .chat-bubble {
+            background-color: #334155; color: white; margin-left: 8px;
+        }
+        [data-theme="light"] body[data-bubble-style="classic"] .items-start .chat-bubble {
+            background-color: white; color: black; border: 1px solid #e2e8f0;
+        }
+        /* As setinhas (Pseudo-elementos) */
+        body[data-bubble-style="classic"] .items-end .chat-bubble::after {
+            content: ''; position: absolute; top: 0; right: -8px; width: 0; height: 0;
+            border-top: 10px solid #059669; border-right: 18px solid transparent;
+        }
+        body[data-bubble-style="classic"] .items-start .chat-bubble::before {
+            content: ''; position: absolute; top: 0; left: -8px; width: 0; height: 0;
+            border-top: 10px solid #334155; border-left: 18px solid transparent;
+        }
+        [data-theme="light"] body[data-bubble-style="classic"] .items-start .chat-bubble::before {
+            border-top-color: white;
+        }
+
+        /* 5. Soft / Minimalista */
+        body[data-bubble-style="soft"] .items-end .chat-bubble {
+            background-color: #6366f1; color: white;
+            border-radius: 24px 24px 4px 24px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        body[data-bubble-style="soft"] .items-start .chat-bubble {
+            background-color: var(--surface-color); color: var(--text-color);
+            border-radius: 24px 24px 24px 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* 6. Comic / Pop */
+        body[data-bubble-style="comic"] .chat-bubble {
+            font-weight: bold; border: 2px solid black; border-radius: 12px;
+            box-shadow: 3px 3px 0px black; transform: translateY(-2px);
+        }
+        body[data-bubble-style="comic"] .items-end .chat-bubble {
+            background-color: #fbbf24; color: black;
+        }
+        body[data-bubble-style="comic"] .items-start .chat-bubble {
+            background-color: white; color: black;
+        }
+        body[data-bubble-style="comic"] .original-text {
+            border-top-color: rgba(0,0,0,0.2); font-style: normal; font-size: 0.8rem;
+        }
+
+        /* 7. Neon (Novo) */
+        body[data-bubble-style="neon"] .chat-bubble {
+            background: rgba(0,0,0,0.8) !important;
+            border: 1px solid;
+            border-radius: 12px !important;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        body[data-bubble-style="neon"] .items-end .chat-bubble {
+            border-color: #0ff; color: #0ff;
+            box-shadow: 0 0 10px #0ff, inset 0 0 5px #0ff;
+            text-shadow: 0 0 2px #0ff;
+        }
+        body[data-bubble-style="neon"] .items-start .chat-bubble {
+            border-color: #f0f; color: #f0f;
+            box-shadow: 0 0 10px #f0f, inset 0 0 5px #f0f;
+            text-shadow: 0 0 2px #f0f;
+        }
+
+        /* 8. Pixel / Retro (Novo) */
+        body[data-bubble-style="pixel"] .chat-bubble {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.65rem;
+            line-height: 1.6;
+            border-radius: 0 !important;
+            border: 2px solid white;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+        }
+        body[data-bubble-style="pixel"] .items-end .chat-bubble {
+            background-color: #4ade80; color: black; border-color: black;
+        }
+        body[data-bubble-style="pixel"] .items-start .chat-bubble {
+            background-color: #f87171; color: white; border-color: white;
+        }
+
+
         [data-theme="light"] {
             --primary-color: #2563eb;
             --secondary-color: #8b5cf6;
@@ -39,20 +183,52 @@
             --bubble-other-text: #1f2937;
         }
 
+        /* --- SISTEMA DE FUNDOS --- */
+        
         @keyframes stars {
             from { background-position: 0 0; }
             to { background-position: -10000px 5000px; }
         }
+
         body {
             font-family: 'Inter', system-ui, sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
             overscroll-behavior: none;
-            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
-            animation: stars 180s linear infinite;
             height: var(--app-height);
             transition: background-color 0.3s, color 0.3s;
             overflow: hidden;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        /* Background: Cosmos (Original) */
+        body[data-bg-style="cosmos"] {
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            animation: stars 180s linear infinite;
+        }
+
+        /* Background: Deep Space (Sólido/Clean) */
+        body[data-bg-style="deep"] {
+            background-color: #020617;
+            background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #020617 100%);
+            animation: none;
+        }
+
+        /* Background: Sunset (Gradient) */
+        body[data-bg-style="sunset"] {
+            background: linear-gradient(to bottom right, #4c1d95, #be185d, #fb923c);
+            animation: none;
+        }
+
+        /* Background: Matrix (Cyber Grid) */
+        body[data-bg-style="matrix"] {
+            background-color: #000;
+            background-image: 
+                linear-gradient(rgba(0, 255, 70, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 70, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: none;
         }
         
         /* Scrollbar */
@@ -93,7 +269,7 @@
             transition: all 0.2s ease;
             max-width: 85%;
             width: fit-content;
-            cursor: pointer; /* Indica que é clicável para menu */
+            cursor: pointer;
             display: flex;
             flex-direction: column;
         }
@@ -117,7 +293,6 @@
             -webkit-user-select: text;
         }
         
-        /* --- ESTILOS DE TRADUÇÃO NOS BALÕES --- */
         .translated-text {
             font-weight: 500;
             margin-bottom: 4px;
@@ -132,12 +307,11 @@
             font-style: italic;
             margin-top: 2px;
         }
-        /* Ajuste para tema light na borda */
         [data-theme="light"] .original-text {
             border-top-color: rgba(0,0,0,0.1);
         }
 
-        /* MENU DE OPÇÕES (Estilo Chat Global) */
+        /* MENU DE OPÇÕES */
         .options-menu {
             position: fixed; 
             background: var(--surface-color);
@@ -165,34 +339,22 @@
         .options-item:hover { background: rgba(255,255,255,0.1); }
         .options-item i { width: 18px; text-align: center; }
         
-        /* Cores dos ícones do menu */
         .opt-translate i { color: #f59e0b; }
         .opt-context i { color: #10b981; }
         .opt-study i { color: #8b5cf6; }
         .opt-vars i { color: #3b82f6; }
 
-        /* MODAL DE ESTUDO (Tokens) */
+        /* MODAL DE ESTUDO */
         .word-token {
-            cursor: pointer;
-            padding: 2px 4px;
-            border-radius: 4px;
-            transition: all 0.2s;
-            display: inline-block;
-            margin: 0 2px;
-            border-bottom: 2px solid transparent;
+            cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: all 0.2s;
+            display: inline-block; margin: 0 2px; border-bottom: 2px solid transparent;
         }
         .word-token:hover {
-            background-color: rgba(59, 130, 246, 0.2);
-            color: #60a5fa;
-            border-bottom-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border-bottom-color: #3b82f6;
         }
         .word-token.selected {
-            background-color: #ec4899;
-            color: white;
-            transform: scale(1.1);
-            font-weight: 600;
-            border-bottom: none;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            background-color: #ec4899; color: white; transform: scale(1.1); font-weight: 600;
+            border-bottom: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
 
         /* Loading Spinner */
@@ -202,7 +364,7 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Botão Mágico (Reescrever) */
+        /* Botão Mágico */
         #rewrite-btn {
             background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
         }
@@ -232,36 +394,27 @@
             100% { opacity: 0; transform: translate(-50%, -20px); }
         }
 
-        /* Seletor de Idioma no Header */
         #room-lang-selector {
-            background: rgba(0,0,0,0.2);
-            color: var(--text-color);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            padding: 4px 8px;
-            font-size: 0.8rem;
-            outline: none;
-            cursor: pointer;
+            background: rgba(0,0,0,0.2); color: var(--text-color);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+            padding: 4px 8px; font-size: 0.8rem; outline: none; cursor: pointer;
         }
         #room-lang-selector option {
-            background: var(--surface-color);
-            color: var(--text-color);
+            background: var(--surface-color); color: var(--text-color);
         }
-        
-        /* Select na tela de Nickname */
-        #intro-lang-selector {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-        }
+        #intro-lang-selector { appearance: none; -webkit-appearance: none; -moz-appearance: none; }
+        .speaker-btn:active { transform: scale(0.9); }
+        #notif-btn svg { transition: all 0.3s ease; }
+        #notif-btn:hover svg { transform: scale(1.1) rotate(10deg); }
 
-        /* Speaker Button Animation */
-        .speaker-btn:active {
-            transform: scale(0.9);
+        /* PREVIEW AREA STYLES */
+        .preview-area {
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Padrão */
+            background-color: var(--background-color);
         }
     </style>
 </head>
-<body data-theme="dark">
+<body data-theme="dark" data-bubble-style="astro" data-bg-style="cosmos">
     
     <script>
         const setAppHeight = () => {
@@ -294,7 +447,7 @@
                 <input type="text" id="nickname-input" placeholder="Viajante Estelar" class="w-full mt-1 p-3 bg-slate-900/50 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-center text-white">
             </div>
 
-            <!-- Campo Idioma (Novo) -->
+            <!-- Campo Idioma -->
             <div>
                 <label for="intro-lang-selector" class="text-sm font-medium text-muted-color">Seu Idioma Principal</label>
                 <div class="relative mt-1">
@@ -327,7 +480,7 @@
                 </div>
             </header>
             
-            <main id="room-list-container" class="flex-1 overflow-y-auto p-4 space-y-3 scroll-container md:bg-[var(--surface-color)] md:bg-opacity-90"></main>
+            <main id="room-list-container" class="md:rounded-b-2xl flex-1 overflow-y-auto p-4 space-y-3 scroll-container md:bg-[var(--surface-color)] md:bg-opacity-90"></main>
 
             <div class="absolute bottom-6 left-6 z-20">
                  <button id="settings-btn" class="w-14 h-14 bg-[var(--surface-color)] hover:bg-opacity-80 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 transform hover:scale-110 border border-white/10 text-[var(--text-color)]">
@@ -359,24 +512,31 @@
                     </div>
                 </div>
 
-                <!-- Seletor de Idioma da Sala (AGORA PESSOAL) -->
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-language text-[var(--text-muted-color)]"></i>
-                    <select id="room-lang-selector" title="Seu idioma pessoal para tradução">
-                        <option value="pt">Português</option>
-                        <option value="en">English</option>
-                        <option value="es">Español</option>
-                        <option value="fr">Français</option>
-                        <option value="de">Deutsch</option>
-                        <option value="it">Italiano</option>
-                        <option value="ja">日本語</option>
-                        <option value="zh">中文</option>
-                        <option value="ru">Русский</option>
-                        <option value="ar">العربية</option>
-                    </select>
-                </div>
+                <div class="flex items-center gap-3">
+                    <!-- Botão de Notificação -->
+                    <button id="notif-btn" class="text-[var(--text-muted-color)] hover:text-[var(--primary-color)] transition-colors p-1" title="Ativar Notificações">
+                        <i class="fas fa-bell-slash"></i>
+                    </button>
 
-                <div class="flex items-center -space-x-2" id="user-avatars-container"></div>
+                    <!-- Seletor de Idioma da Sala -->
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-language text-[var(--text-muted-color)]"></i>
+                        <select id="room-lang-selector" title="Seu idioma pessoal para tradução">
+                            <option value="pt">Português</option>
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="it">Italiano</option>
+                            <option value="ja">日本語</option>
+                            <option value="zh">中文</option>
+                            <option value="ru">Русский</option>
+                            <option value="ar">العربية</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center -space-x-2" id="user-avatars-container"></div>
+                </div>
             </header>
 
             <main id="messages-container" class="flex-1 p-4 overflow-y-auto flex flex-col scroll-container bg-[var(--surface-color)]/30">
@@ -393,7 +553,6 @@
                         <textarea id="message-input" rows="1" placeholder="Digite uma mensagem..." class="w-full bg-[var(--surface-color)] text-[var(--text-color)] rounded-2xl py-3 px-4 outline-none focus:ring-2 focus:ring-[var(--primary-color)] border border-white/5 resize-none overflow-hidden max-h-32" style="min-height: 48px;"></textarea>
                     </div>
                     
-                    <!-- Botão Mágico Reescrever (Mantido) -->
                     <button id="rewrite-btn" class="w-12 h-12 rounded-full flex items-center justify-center transition-transform active:scale-90 shadow-lg text-white mb-[2px]" title="Melhorar texto com IA">
                         <i class="fas fa-magic"></i>
                     </button>
@@ -407,35 +566,89 @@
     </div>
     
     <!-- Modals -->
-    <div id="settings-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-        <div class="glassmorphism p-6 rounded-2xl max-w-sm w-full flex flex-col gap-5">
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+        <div class="glassmorphism p-6 rounded-2xl max-w-sm w-full flex flex-col gap-4 my-auto">
             <div class="flex justify-between items-center">
                  <h3 class="text-xl font-bold">Configurações</h3>
                  <button id="close-settings-modal-btn" class="text-2xl text-muted-color hover:text-text-color">&times;</button>
             </div>
+            
+            <!-- Tema Light/Dark -->
             <div>
-                <label class="text-sm font-medium text-muted-color mb-3 block">Tema Visual</label>
+                <label class="text-sm font-medium text-muted-color mb-2 block">Tema do App</label>
                 <div class="flex gap-3">
-                    <button data-theme="dark" class="theme-btn flex-1 p-4 rounded-xl border-2 border-transparent bg-slate-800 text-white flex flex-col items-center gap-2 transition-all">
-                        <i class="fas fa-moon"></i> Astro
+                    <button data-theme="dark" class="theme-btn flex-1 p-3 rounded-xl border-2 border-transparent bg-slate-800 text-white flex flex-col items-center gap-1 transition-all">
+                        <i class="fas fa-moon"></i> Dark
                     </button>
-                    <button data-theme="light" class="theme-btn flex-1 p-4 rounded-xl border-2 border-transparent bg-slate-200 text-black flex flex-col items-center gap-2 transition-all">
-                        <i class="fas fa-sun"></i> Nebula
+                    <button data-theme="light" class="theme-btn flex-1 p-3 rounded-xl border-2 border-transparent bg-slate-200 text-black flex flex-col items-center gap-1 transition-all">
+                        <i class="fas fa-sun"></i> Light
                     </button>
                 </div>
             </div>
+
+            <!-- Estilo do Fundo (NOVO) -->
+             <div>
+                <label class="text-sm font-medium text-muted-color mb-2 block">Plano de Fundo</label>
+                <div class="relative">
+                    <select id="bg-style-selector" class="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-color)] text-white cursor-pointer appearance-none">
+                        <option value="cosmos">✨ Cosmos (Animado)</option>
+                        <option value="deep">🌑 Deep Space (Sólido)</option>
+                        <option value="sunset">🌅 Sunset (Gradiente)</option>
+                        <option value="matrix">💻 Matrix (Cyber Grid)</option>
+                    </select>
+                    <i class="fas fa-image absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                </div>
+            </div>
+
+            <!-- Estilo dos Balões -->
+            <div>
+                <label class="text-sm font-medium text-muted-color mb-2 block">Estilo dos Balões</label>
+                <div class="relative">
+                    <select id="bubble-style-selector" class="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-color)] text-white cursor-pointer appearance-none">
+                        <option value="astro">✨ Astro Original</option>
+                        <option value="modern">🔵 Moderno</option>
+                        <option value="cyber">🤖 Cyberpunk</option>
+                        <option value="neon">⚡ Neon Glow (Novo)</option>
+                        <option value="pixel">👾 Pixel Retro (Novo)</option>
+                        <option value="classic">💬 Clássico</option>
+                        <option value="soft">☁️ Soft</option>
+                        <option value="comic">💥 Comic</option>
+                    </select>
+                    <i class="fas fa-paint-brush absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                </div>
+                
+                <!-- ÁREA DE VISUALIZAÇÃO (PREVIEW) NOVO -->
+                <div class="mt-4 p-4 rounded-xl border border-white/10 bg-black/40 relative overflow-hidden">
+                    <p class="text-[10px] text-muted-color mb-3 text-center uppercase tracking-widest font-bold z-10 relative">Pré-visualização</p>
+                    
+                    <div class="flex flex-col gap-3 pointer-events-none z-10 relative">
+                        <!-- Balão do outro (Received) -->
+                        <div class="message-wrapper items-start !mb-0">
+                            <div class="chat-bubble">
+                                <div class="translated-text">Olá! Tudo bem?</div>
+                                <div class="original-text">Hello! How are you?</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Balão do próprio usuário (Sent) -->
+                        <div class="message-wrapper items-end !mb-0">
+                            <div class="chat-bubble">
+                                <div class="translated-text">Tudo ótimo!</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            <!-- Botão Limpar Dados (Novo) -->
-            <div class="border-t border-white/10 pt-4 mt-2">
-                <button id="clear-data-btn" class="w-full p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 flex items-center justify-center gap-2 transition-all font-bold">
+            <div class="border-t border-white/10 pt-4">
+                <button id="clear-data-btn" class="w-full p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 flex items-center justify-center gap-2 transition-all font-bold text-sm">
                     <i class="fas fa-trash-alt"></i> Limpar Dados / Sair
                 </button>
-                <p class="text-xs text-center text-muted-color mt-2">Isso apagará seu apelido, preferências e histórico de salas recentes.</p>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Estudo (Novo) -->
+    <!-- Modal de Estudo -->
     <div id="study-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
         <div class="glassmorphism p-0 rounded-2xl max-w-lg w-full flex flex-col max-h-[90vh] overflow-hidden">
             <div class="p-4 border-b border-white/10 flex justify-between items-center bg-[var(--primary-color)] text-white">
@@ -454,7 +667,6 @@
                     
                     <div class="flex items-center gap-3">
                         <h4 id="word-translation" class="text-xl font-bold text-[var(--secondary-color)]"></h4>
-                        <!-- Container dinâmico para o botão de fala será inserido via JS -->
                         <div id="word-speak-container"></div>
                     </div>
                     
@@ -472,7 +684,7 @@
         </div>
     </div>
 
-    <!-- Modal Genérico (Resultado de Tradução/Contexto) -->
+    <!-- Modal Genérico -->
     <div id="generic-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
         <div class="glassmorphism p-6 rounded-2xl max-w-md w-full flex flex-col gap-4">
             <div class="flex justify-between items-center">
@@ -523,20 +735,26 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // VARIÁVEIS GLOBAIS
-        let currentRoom, nickname, userId, presenceRef, typingTimeout, messageObserver;
+        // --- PWA REGISTRATION ---
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js").catch(console.error);
+        }
+
+        let currentRoom, nickname, userId, presenceRef, typingTimeout;
         let roomUnsubscribes = [];
         let replyingToMessage = null;
         let activeMessageMenu = null;
-        // Pega do localStorage ou define 'pt' como padrão se for a primeira vez
+        let loadTime = Date.now();
         let currentTranslationLang = localStorage.getItem('astroUserLang') || "pt"; 
         const userColors = {};
         let onlineUsersInRoom = {};
         
-        // CACHE DE TRADUÇÃO SIMPLES
+        let notificationAudio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+        notificationAudio.volume = 0.5;
+        let audioUnlocked = false;
+
         const translationCache = {};
 
-        // ELEMENTOS DOM
         const DOMElements = {
             splash: document.getElementById('splash-screen'),
             app: document.getElementById('app-container'),
@@ -563,9 +781,37 @@
             introLangSelector: document.getElementById('intro-lang-selector'),
             studyModal: document.getElementById('study-modal'),
             genericModal: document.getElementById('generic-modal'),
-            clearDataBtn: document.getElementById('clear-data-btn')
+            clearDataBtn: document.getElementById('clear-data-btn'),
+            notifBtn: document.getElementById('notif-btn')
         };
 
+        // --- LÓGICA DE ESTILOS DE BALÃO E FUNDO ---
+        const styleSelector = document.getElementById('bubble-style-selector');
+        const bgSelector = document.getElementById('bg-style-selector');
+
+        const setBubbleStyle = (style) => {
+            document.body.setAttribute('data-bubble-style', style);
+            localStorage.setItem('astroBubbleStyle', style);
+            if(styleSelector) styleSelector.value = style;
+        };
+
+        const setBackgroundStyle = (style) => {
+            document.body.setAttribute('data-bg-style', style);
+            localStorage.setItem('astroBgStyle', style);
+            if(bgSelector) bgSelector.value = style;
+        }
+
+        // Inicializar configurações salvas
+        const savedStyle = localStorage.getItem('astroBubbleStyle') || 'astro';
+        setBubbleStyle(savedStyle);
+        
+        const savedBg = localStorage.getItem('astroBgStyle') || 'cosmos';
+        setBackgroundStyle(savedBg);
+
+        // Listeners
+        styleSelector.addEventListener('change', (e) => setBubbleStyle(e.target.value));
+        bgSelector.addEventListener('change', (e) => setBackgroundStyle(e.target.value));
+        
         const LANG_MAP = {
             ar: "árabe", pt: "português", es: "espanhol", ja: "japonês",
             zh: "chinês", en: "inglês", fr: "francês", de: "alemão",
@@ -602,66 +848,49 @@
             const start = text.indexOf("{");
             const end = text.lastIndexOf("}");
             if (start !== -1 && end !== -1) return JSON.parse(text.slice(start, end + 1));
-            
-            // Tenta array
             const startArr = text.indexOf("[");
             const endArr = text.lastIndexOf("]");
             if (startArr !== -1 && endArr !== -1) return JSON.parse(text.slice(startArr, endArr + 1));
             throw new Error("JSON inválido");
         }
 
-        // 1. Otimizar Texto
         async function reescreverTexto(texto) {
-            const prompt = `
-                Aja como um assistente de escrita experiente.
-                Reescreva o texto abaixo para torná-lo mais claro, gramaticalmente correto e natural.
-                Mantenha o idioma original do texto.
-                Responda APENAS com o texto reescrito.
-                Texto: "${texto}"
-            `;
+            const prompt = `Reescreva o texto abaixo para torná-lo mais claro e natural. Mantenha o idioma. Texto: "${texto}"`;
             const result = await aiRequest(prompt);
             return result.replace(/^"|"$/g, '').trim();
         }
 
-        // 2. Traduzir
         async function traduzir(texto, targetLang) {
             const cacheKey = `${texto}_${targetLang}`;
             if(translationCache[cacheKey]) return translationCache[cacheKey];
 
             const idioma = LANG_MAP[targetLang] || targetLang;
-            const prompt = `Traduza o texto a seguir para ${idioma}. Produza SOMENTE a tradução. Texto: "${texto}"`;
+            const prompt = `Traduza o texto a seguir para  ${idioma}: "${texto}". Produza SOMENTE a tradução, sem comentários ou explicações`;
             
             try {
                 const res = await aiRequest(prompt, false);
                 translationCache[cacheKey] = res;
                 return res;
             } catch(e) {
-                return texto; // Fallback
+                return texto;
             }
         }
 
-        // 3. Contexto
         async function analisarContexto(texto, targetLang) {
             const idioma = LANG_MAP[targetLang] || "português";
-            const prompt = `Explique de forma OBJETIVA o contexto e a intenção da frase abaixo. Responda SOMENTE em ${idioma}. Frase: "${texto}"`;
+            const prompt = `Explique o contexto/intenção da frase: "${texto}". Responda em ${idioma}.`;
             return await aiRequest(prompt);
         }
 
-        // 4. Variações
         async function gerarVariacoes(texto, targetLang) {
             const idioma = LANG_MAP[targetLang] || "português";
-            const prompt = `Gere 3 variações DIFERENTES e naturais da tradução abaixo para ${idioma}. Responda apenas com as frases, uma por linha. Texto: "${texto}"`;
+            const prompt = `Gere 3 variações da tradução para ${idioma} de: "${texto}".`;
             const txt = await aiRequest(prompt);
             return txt.split("\n").filter(t => t.trim().length > 0);
         }
 
-        // 5. Segmentação (Tokenização para Estudo)
         async function segmentarTexto(texto) {
-            const prompt = `
-                Divida o texto abaixo em tokens/palavras individuais para um dicionário interativo.
-                Retorne APENAS um Array JSON de strings. Exemplo: ["Olá", ",", "mundo"]
-                Texto: "${texto}"
-            `;
+            const prompt = `Divida em palavras/tokens JSON array: "${texto}"`;
             try {
                 const res = await aiRequest(prompt);
                 return extractJSON(res);
@@ -670,23 +899,59 @@
             }
         }
 
-        // 6. Explorar Palavra
         async function explorarPalavra(palavra, frase, userLang) {
             const idiomaUsuario = LANG_MAP[userLang] || "português";
-            const prompt = `
-                Aja como um professor de idiomas.
-                Analise a palavra: "${palavra}" na frase: "${frase}".
-                Retorne APENAS JSON:
-                {
-                    "traducao_contextual": "Tradução para ${idiomaUsuario}",
-                    "explicacao": "Explicação breve em ${idiomaUsuario}",
-                    "classe_gramatical": "Classe gramatical em ${idiomaUsuario}",
-                    "exemplo_uso": "Nova frase curta na língua original",
-                    "idioma_origem_iso": "Código ISO da língua original da palavra (ex: en-US, pt-BR, fr-FR)"
-                }
-            `;
+            const prompt = `Analise a palavra "${palavra}" no contexto "${frase}". Retorne JSON: { "traducao_contextual": "...", "explicacao": "...", "classe_gramatical": "...", "exemplo_uso": "...", "idioma_origem_iso": "..." } (Responda em ${idiomaUsuario})`;
             const res = await aiRequest(prompt);
             return extractJSON(res);
+        }
+
+        /* ========================
+           NOTIFICAÇÕES
+           ======================== */
+
+        function updateNotifIcon() {
+            if (Notification.permission === 'granted') {
+                DOMElements.notifBtn.innerHTML = '<i class="fas fa-bell text-[var(--primary-color)]"></i>';
+                DOMElements.notifBtn.title = "Notificações Ativadas";
+            } else {
+                DOMElements.notifBtn.innerHTML = '<i class="fas fa-bell-slash text-[var(--text-muted-color)]"></i>';
+                DOMElements.notifBtn.title = "Ativar Notificações";
+            }
+        }
+
+        async function unlockAudioAndRequestPermission() {
+            if (!audioUnlocked) {
+                try {
+                    await notificationAudio.play();
+                    notificationAudio.pause();
+                    notificationAudio.currentTime = 0;
+                    audioUnlocked = true;
+                } catch (e) {}
+            }
+            if ("Notification" in window && Notification.permission !== "granted") {
+                try {
+                    const permission = await Notification.requestPermission();
+                    updateNotifIcon();
+                    if (permission === 'granted') {
+                        new Notification("Astro Chat", { body: "Notificações ativadas!" });
+                        notificationAudio.play().catch(e => {});
+                    }
+                } catch (e) {}
+            }
+        }
+
+        function checkAndNotify(msgData) {
+            const isNew = msgData.timestamp > loadTime;
+            const isOther = msgData.userId !== userId;
+            if (isNew && isOther) {
+                if (audioUnlocked) try { notificationAudio.play().catch(e => {}); } catch(e) {}
+                if (document.hidden && "serviceWorker" in navigator) {
+                    navigator.serviceWorker.ready.then(reg => 
+                        reg.showNotification(`Astro: ${msgData.nickname}`, { body: msgData.text, icon: "https://cdn-icons-png.flaticon.com/512/2554/2554978.png" })
+                    );
+                }
+            }
         }
 
         /* ========================
@@ -696,11 +961,10 @@
         window.onload = async () => {
             initializeUser();
             initializeTheme();
-            
-            // Setar valor inicial do seletor do chat com o idioma salvo
+            if ("Notification" in window) updateNotifIcon();
+            else DOMElements.notifBtn.style.display = 'none';
+
             DOMElements.roomLangSelector.value = currentTranslationLang;
-            
-            // Setar valor do seletor de introdução caso já exista algo (embora a tela não vá aparecer se tiver nick)
             DOMElements.introLangSelector.value = currentTranslationLang;
 
             await new Promise(res => setTimeout(res, 1200));
@@ -716,20 +980,17 @@
                 switchScreen('nickname');
             }
 
-            // Auto-resize do textarea
             DOMElements.messageInput.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
-                if(this.value === '') this.style.height = 'auto';
                 handleTyping();
             });
 
-            // LANGUAGE LISTENER (Chat Screen)
             DOMElements.roomLangSelector.addEventListener('change', (e) => {
                 const newLang = e.target.value;
                 currentTranslationLang = newLang;
                 localStorage.setItem('astroUserLang', newLang);
-                showToast(`Seu idioma foi alterado para ${newLang.toUpperCase()}`, 'success');
+                showToast(`Idioma alterado para ${newLang.toUpperCase()}`, 'success');
                 retranslateAllMessages(newLang);
             });
         };
@@ -741,22 +1002,18 @@
                 el.classList.toggle('flex', s === screen);
             });
             if (screen === 'lobby') renderRoomList();
-            if (screen === 'chat') onlineUsersInRoom = {};
+            if (screen === 'chat') {
+                onlineUsersInRoom = {};
+                loadTime = Date.now();
+            }
         };
-
-        /* ========================
-           CHAT RENDERIZAÇÃO
-           ======================== */
 
         const renderMessage = (msgData, msgId) => {
             if (!msgData || !msgData.text) return;
-
             const existingMsgWrapper = DOMElements.messagesList.querySelector(`[data-msg-id="${msgId}"]`);
             if (existingMsgWrapper) {
                 const nickEl = existingMsgWrapper.querySelector('.nickname-display');
-                if (nickEl && msgData.nickname !== nickEl.textContent) {
-                    nickEl.textContent = msgData.nickname;
-                }
+                if (nickEl && msgData.nickname !== nickEl.textContent) nickEl.textContent = msgData.nickname;
                 return;
             }
 
@@ -772,35 +1029,18 @@
             if (!userColors[msgData.userId]) userColors[msgData.userId] = `hsl(${Math.random() * 360}, 70%, 60%)`;
 
             let contentHTML = '';
-            
             if (msgData.repliedTo) {
-               contentHTML += `<div class="mb-1 pl-2 border-l-2 border-white/30 text-xs opacity-70">
-                       <strong class="block">${msgData.repliedTo.nickname}</strong>
-                       <span class="truncate block max-w-[200px]">${msgData.repliedTo.text}</span>
-                   </div>`;
+               contentHTML += `<div class="mb-1 pl-2 border-l-2 border-white/30 text-xs opacity-70"><strong class="block">${msgData.repliedTo.nickname}</strong><span class="truncate block max-w-[200px]">${msgData.repliedTo.text}</span></div>`;
             }
 
-            if (!isSelf) {
-                contentHTML += `<div class="nickname-display text-xs font-bold mb-1 opacity-90" style="color: ${userColors[msgData.userId]};">${msgData.nickname}</div>`;
-            }
+            if (!isSelf) contentHTML += `<div class="nickname-display text-xs font-bold mb-1 opacity-90" style="color: ${userColors[msgData.userId]};">${msgData.nickname}</div>`;
 
             const safeText = msgData.text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, '<br>');
             const translationId = `trans-${msgId}`;
             
-            contentHTML += `
-                <div id="${translationId}" class="translated-text">
-                    <i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i>
-                </div>
-                <div class="original-text">${safeText}</div>
-            `;
-
+            contentHTML += `<div id="${translationId}" class="translated-text"><i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i></div><div class="original-text">${safeText}</div>`;
             const time = new Date(msgData.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            contentHTML += `
-                <div class="flex items-center justify-end gap-1 mt-1 opacity-60 text-[0.65rem] select-none">
-                    <span>${time}</span>
-                    ${isSelf ? '<i class="fas fa-check text-white/50"></i>' : ''}
-                </div>
-            `;
+            contentHTML += `<div class="flex items-center justify-end gap-1 mt-1 opacity-60 text-[0.65rem] select-none"><span>${time}</span>${isSelf ? '<i class="fas fa-check text-white/50"></i>' : ''}</div>`;
 
             bubble.innerHTML = contentHTML;
             messageWrapper.appendChild(bubble);
@@ -813,34 +1053,26 @@
 
             DOMElements.messagesList.insertBefore(messageWrapper, DOMElements.typingIndicatorContainer);
             scrollToBottom();
-
             performTranslation(msgId, msgData.text, currentTranslationLang);
         };
 
         const performTranslation = async (msgId, originalText, lang) => {
             const el = document.getElementById(`trans-${msgId}`);
             if (!el) return;
-
-            if (!el.textContent || el.querySelector('.fa-spin')) {
-                el.innerHTML = '<i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i>';
-            }
+            if (!el.textContent || el.querySelector('.fa-spin')) el.innerHTML = '<i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i>';
 
             try {
                 const translated = await traduzir(originalText, lang);
-                
                 if(translated.toLowerCase().trim() === originalText.toLowerCase().trim()) {
                     el.textContent = translated;
                     const origEl = el.nextElementSibling;
                     if(origEl && origEl.classList.contains('original-text')) {
-                        origEl.style.display = 'none'; 
-                        el.style.marginBottom = '0'; 
+                        origEl.style.display = 'none'; el.style.marginBottom = '0'; 
                     }
                 } else {
                     el.textContent = translated;
                     const origEl = el.nextElementSibling;
-                    if(origEl && origEl.classList.contains('original-text')) {
-                        origEl.style.display = 'block'; 
-                    }
+                    if(origEl && origEl.classList.contains('original-text')) origEl.style.display = 'block'; 
                 }
             } catch (err) {
                 el.style.display = 'none';
@@ -848,58 +1080,39 @@
         }
 
         const retranslateAllMessages = (newLang) => {
-            showToast(`Traduzindo mensagens para ${newLang.toUpperCase()}...`, 'info');
-            const wrappers = document.querySelectorAll('.message-wrapper');
-            wrappers.forEach(wrapper => {
+            showToast(`Traduzindo para ${newLang.toUpperCase()}...`, 'info');
+            document.querySelectorAll('.message-wrapper').forEach(wrapper => {
                 const msgId = wrapper.dataset.msgId;
                 const originalTextEl = wrapper.querySelector('.original-text');
-                if (originalTextEl && msgId) {
-                    performTranslation(msgId, originalTextEl.innerText, newLang);
-                }
+                if (originalTextEl && msgId) performTranslation(msgId, originalTextEl.innerText, newLang);
             });
         };
 
         const renderTypingIndicator = (typingUsers) => {
             const container = DOMElements.typingIndicatorContainer;
             container.innerHTML = '';
-            
             Object.entries(typingUsers).forEach(([typingUserId, userData]) => {
                 if (!userData || !userData.nickname) return;
-                
                 const wrapper = document.createElement('div');
                 wrapper.className = 'flex flex-col items-start mb-2 ml-1 animate-pulse max-w-[80%]';
-                
-                wrapper.innerHTML = `
-                    <div class="text-xs text-muted-color mb-1 ml-2">${userData.nickname} está digitando...</div>
-                    <div class="chat-bubble bg-[var(--bubble-other-bg)] text-[var(--bubble-other-text)] rounded-2xl py-2 px-4 opacity-70 italic text-sm border border-white/10">
-                        ${userData.text || '...'}
-                    </div>
-                `;
+                wrapper.innerHTML = `<div class="text-xs text-muted-color mb-1 ml-2">${userData.nickname} digitando...</div><div class="chat-bubble bg-[var(--bubble-other-bg)] text-[var(--bubble-other-text)] rounded-2xl py-2 px-4 opacity-70 italic text-sm border border-white/10">${userData.text || '...'}</div>`;
                 container.appendChild(wrapper);
             });
-            
             if (Object.keys(typingUsers).length > 0) scrollToBottom();
         };
 
-        const scrollToBottom = () => {
-            DOMElements.messagesContainer.scrollTop = DOMElements.messagesContainer.scrollHeight;
-        }
-
-        /* ========================
-           MENUS E INTERAÇÕES
-           ======================== */
+        const scrollToBottom = () => DOMElements.messagesContainer.scrollTop = DOMElements.messagesContainer.scrollHeight;
 
         const openActionsMenu = (triggerEl, msgId, text) => {
             if(activeMessageMenu) activeMessageMenu.remove();
-
             const menu = document.createElement('div');
             menu.className = 'options-menu';
             
             const options = [
-                { icon: 'fa-language', label: 'Traduzir', class: 'opt-translate', action: () => handleAction('translate', text) },
-                { icon: 'fa-lightbulb', label: 'Contexto', class: 'opt-context', action: () => handleAction('context', text) },
-                { icon: 'fa-graduation-cap', label: 'Estudar', class: 'opt-study', action: () => handleAction('study', text) },
-                { icon: 'fa-random', label: 'Variações', class: 'opt-vars', action: () => handleAction('variations', text) },
+                { icon: 'fa-language', label: 'Retraduzir', class: 'opt-translate', action: () => handleAction('translate', text, msgId) },
+                { icon: 'fa-lightbulb', label: 'Contexto', class: 'opt-context', action: () => handleAction('context', text, msgId) },
+                { icon: 'fa-graduation-cap', label: 'Estudar', class: 'opt-study', action: () => handleAction('study', text, msgId) },
+                { icon: 'fa-random', label: 'Variações', class: 'opt-vars', action: () => handleAction('variations', text, msgId) },
                 { icon: 'fa-copy', label: 'Copiar', class: '', action: () => { navigator.clipboard.writeText(text); showToast('Copiado!'); } }
             ];
 
@@ -907,208 +1120,131 @@
                 const item = document.createElement('div');
                 item.className = `options-item ${opt.class || ''}`;
                 item.innerHTML = `<i class="fas ${opt.icon}"></i> ${opt.label}`;
-                item.onclick = (e) => {
-                    e.stopPropagation();
-                    opt.action();
-                    menu.remove();
-                    activeMessageMenu = null;
-                };
+                item.onclick = (e) => { e.stopPropagation(); opt.action(); menu.remove(); activeMessageMenu = null; };
                 menu.appendChild(item);
             });
 
             document.body.appendChild(menu);
             menu.classList.add('show'); 
             activeMessageMenu = menu;
-
             const rect = triggerEl.getBoundingClientRect();
             const menuRect = menu.getBoundingClientRect();
             
             let top = rect.bottom + 5;
             let left = rect.left;
-
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-
-            if (top + menuRect.height > viewportHeight) {
-                top = rect.top - menuRect.height - 5;
-            }
-
-            if (left + menuRect.width > viewportWidth - 10) {
-                left = viewportWidth - menuRect.width - 10;
-            }
-            left = Math.max(10, left);
-
+            if (top + menuRect.height > window.innerHeight) top = rect.top - menuRect.height - 5;
+            if (left + menuRect.width > window.innerWidth - 10) left = window.innerWidth - menuRect.width - 10;
+            
             menu.style.top = top + 'px';
-            menu.style.left = left + 'px';
+            menu.style.left = Math.max(10, left) + 'px';
 
             const closeMenu = (e) => {
                 if(!menu.contains(e.target)) {
-                    menu.remove();
-                    activeMessageMenu = null;
-                    document.removeEventListener('click', closeMenu);
+                    menu.remove(); activeMessageMenu = null; document.removeEventListener('click', closeMenu);
                 }
             };
             setTimeout(() => document.addEventListener('click', closeMenu), 100);
         };
 
-        async function handleAction(type, text) {
+        async function handleAction(type, text, msgId = null) {
             const targetLang = currentTranslationLang; 
-            showToast("Processando com IA...", "info");
-
+            showToast("Processando...", "info");
             try {
                 if (type === 'translate') {
-                    const trad = await traduzir(text, targetLang);
-                    showGenericModal(`Tradução (${targetLang})`, trad);
+                    if (msgId) {
+                        const el = document.getElementById(`trans-${msgId}`);
+                        if(el) { el.innerHTML = '<i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i>'; await performTranslation(msgId, text, targetLang); showToast("Atualizado!", "success"); }
+                    } else {
+                        const trad = await traduzir(text, targetLang); showGenericModal(`Tradução (${targetLang})`, trad);
+                    }
                 } else if (type === 'context') {
-                    const ctx = await analisarContexto(text, targetLang);
-                    showGenericModal('Contexto & Intenção', ctx);
+                    const ctx = await analisarContexto(text, targetLang); showGenericModal('Contexto', ctx);
                 } else if (type === 'variations') {
-                    const vars = await gerarVariacoes(text, targetLang);
-                    showGenericModal('Variações', vars.map(v => `• ${v}`).join('<br><br>'));
+                    const vars = await gerarVariacoes(text, targetLang); showGenericModal('Variações', vars.map(v => `• ${v}`).join('<br><br>'));
                 } else if (type === 'study') {
                     openStudyModal(text);
                 }
-            } catch (e) {
-                console.error(e);
-                showToast("Erro ao processar solicitação IA.", "error");
-            }
+            } catch (e) { console.error(e); showToast("Erro na IA.", "error"); }
         }
-
-        /* ========================
-           MODAIS
-           ======================== */
 
         function showGenericModal(title, content) {
             document.getElementById('generic-modal-title').textContent = title;
             document.getElementById('generic-modal-content').innerHTML = content;
-            DOMElements.genericModal.classList.remove('hidden');
-            DOMElements.genericModal.classList.add('flex');
+            DOMElements.genericModal.classList.remove('hidden'); DOMElements.genericModal.classList.add('flex');
         }
 
         async function openStudyModal(text) {
-            DOMElements.studyModal.classList.remove('hidden');
-            DOMElements.studyModal.classList.add('flex');
-            
+            DOMElements.studyModal.classList.remove('hidden'); DOMElements.studyModal.classList.add('flex');
             const originalArea = document.getElementById('study-original-text');
-            originalArea.innerHTML = '<span class="text-sm opacity-50">Carregando tokens...</span>';
+            originalArea.innerHTML = '<span class="text-sm opacity-50">Carregando...</span>';
             document.getElementById('study-result-area').classList.add('hidden');
-
             try {
                 const tokens = await segmentarTexto(text);
                 originalArea.innerHTML = '';
                 tokens.forEach(token => {
                     const span = document.createElement('span');
-                    span.textContent = token;
-                    span.className = 'word-token';
+                    span.textContent = token; span.className = 'word-token';
                     span.onclick = () => selectToken(span, token, text);
                     originalArea.appendChild(span);
                 });
-            } catch (e) {
-                originalArea.textContent = text;
-            }
+            } catch (e) { originalArea.textContent = text; }
         }
 
         async function selectToken(el, token, contextPhrase) {
             document.querySelectorAll('.word-token').forEach(t => t.classList.remove('selected'));
             el.classList.add('selected');
-
             document.getElementById('study-loading').classList.remove('hidden');
             document.getElementById('study-result-area').classList.add('hidden');
-
             try {
                 const data = await explorarPalavra(token, contextPhrase, currentTranslationLang);
-
                 document.getElementById('word-translation').textContent = data.traducao_contextual;
-                
                 const speakContainer = document.getElementById('word-speak-container');
                 speakContainer.innerHTML = ''; 
-                
                 const btn = document.createElement('button');
                 btn.className = "speaker-btn bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all text-white";
                 btn.innerHTML = '<i class="fas fa-volume-high"></i>';
-                btn.title = "Ouvir pronúncia";
-                
-                const speakLang = data.idioma_origem_iso || 'en-US';
-                
                 btn.onclick = () => {
                     const utterance = new SpeechSynthesisUtterance(token);
-                    utterance.lang = speakLang;
+                    utterance.lang = data.idioma_origem_iso || 'en-US';
                     window.speechSynthesis.speak(utterance);
                 };
                 speakContainer.appendChild(btn);
-
                 document.getElementById('word-explanation').textContent = data.explicacao;
                 document.getElementById('word-example').textContent = `"${data.exemplo_uso}"`;
-                
                 document.getElementById('word-class-badge').textContent = data.classe_gramatical;
                 document.getElementById('word-lang-badge').textContent = (data.idioma_origem_iso || 'unk').toUpperCase();
-
                 document.getElementById('study-loading').classList.add('hidden');
                 document.getElementById('study-result-area').classList.remove('hidden');
-            } catch (e) {
-                showToast("Erro ao analisar palavra.", "error");
-                document.getElementById('study-loading').classList.add('hidden');
-            }
+            } catch (e) { showToast("Erro ao analisar.", "error"); document.getElementById('study-loading').classList.add('hidden'); }
         }
 
-        document.getElementById('close-study-modal').onclick = () => {
-            DOMElements.studyModal.classList.add('hidden');
-            DOMElements.studyModal.classList.remove('flex');
-        };
-        document.getElementById('close-generic-modal').onclick = () => {
-            DOMElements.genericModal.classList.add('hidden');
-            DOMElements.genericModal.classList.remove('flex');
-        };
-
-        /* ========================
-           LÓGICA DO APP
-           ======================== */
+        document.getElementById('close-study-modal').onclick = () => { DOMElements.studyModal.classList.add('hidden'); DOMElements.studyModal.classList.remove('flex'); };
+        document.getElementById('close-generic-modal').onclick = () => { DOMElements.genericModal.classList.add('hidden'); DOMElements.genericModal.classList.remove('flex'); };
 
         DOMElements.rewriteBtn.addEventListener('click', async () => {
             const input = DOMElements.messageInput;
             const originalText = input.value.trim();
-            
-            if (!originalText) {
-                showToast("Digite algo para a mágica acontecer!", "info");
-                return;
-            }
-
+            if (!originalText) return;
             const btnIcon = DOMElements.rewriteBtn.querySelector('i');
             btnIcon.className = "fas fa-spinner fa-spin";
             DOMElements.rewriteBtn.classList.add('magic-pulse');
-            input.disabled = true;
-            input.style.opacity = "0.7";
-
+            input.disabled = true; input.style.opacity = "0.7";
             try {
-                const typingRef = ref(db, `typing/${currentRoom}/${userId}`);
-                set(typingRef, { nickname, text: "✨ Melhorando texto..." });
-
                 const novoTexto = await reescreverTexto(originalText);
-                input.value = novoTexto;
-                input.focus();
-                showToast("Texto melhorado!", "success");
-
-            } catch (error) {
-                showToast("A magia falhou temporariamente.", "error");
-            } finally {
-                input.disabled = false;
-                input.style.opacity = "1";
-                btnIcon.className = "fas fa-magic";
-                DOMElements.rewriteBtn.classList.remove('magic-pulse');
-                handleTyping(); 
+                input.value = novoTexto; input.focus(); showToast("Melhorado!", "success");
+            } catch (error) { showToast("Erro.", "error"); } 
+            finally {
+                input.disabled = false; input.style.opacity = "1";
+                btnIcon.className = "fas fa-magic"; DOMElements.rewriteBtn.classList.remove('magic-pulse');
+                handleTyping();
             }
         });
 
         const sendMessage = () => {
             const text = DOMElements.messageInput.value.trim();
             if (!text || !currentRoom) return;
-            
-            const newMessage = {
-                userId, nickname, text, 
-                timestamp: serverTimestamp(),
-            };
+            const newMessage = { userId, nickname, text, timestamp: serverTimestamp() };
             if(replyingToMessage) newMessage.repliedTo = replyingToMessage;
-            
             push(ref(db, `messages/${currentRoom}`), newMessage);
             DOMElements.messageInput.value = '';
             DOMElements.messageInput.style.height = 'auto';
@@ -1122,83 +1258,57 @@
                 set(typingRef, { nickname, text: text.substring(0, 60) });
                 if (typingTimeout) clearTimeout(typingTimeout);
                 typingTimeout = setTimeout(() => set(typingRef, null), 3000);
-            } else {
-                set(typingRef, null);
-            }
+            } else { set(typingRef, null); }
         };
 
         async function updateNicknameHistory(newNickname) {
             if (!userId) return;
-            
             const recentRooms = JSON.parse(localStorage.getItem("recentRooms") || "[]");
-            if (recentRooms.length === 0) return;
-
-            showToast("Atualizando histórico de mensagens...", "info");
-
             for (const roomCode of recentRooms) {
                 try {
                     const msgsRef = ref(db, `messages/${roomCode}`);
                     const snapshot = await get(msgsRef);
-                    
                     if (snapshot.exists()) {
                         const updates = {};
                         snapshot.forEach((childSnap) => {
                             const msg = childSnap.val();
-                            if (msg.userId === userId && msg.nickname !== newNickname) {
-                                updates[`${childSnap.key}/nickname`] = newNickname;
-                            }
+                            if (msg.userId === userId && msg.nickname !== newNickname) updates[`${childSnap.key}/nickname`] = newNickname;
                         });
-
-                        if (Object.keys(updates).length > 0) {
-                            await update(msgsRef, updates);
-                        }
+                        if (Object.keys(updates).length > 0) await update(msgsRef, updates);
                     }
-                } catch(e) {
-                    console.error(`Erro ao atualizar sala ${roomCode}:`, e);
-                }
+                } catch(e) {}
             }
-            showToast("Histórico atualizado!", "success");
         }
 
         const joinRoom = async (roomCode) => {
             await cleanupRoomListeners();
             if (!roomCode) return;
-            
             currentRoom = roomCode;
             updateRecentRooms(roomCode);
-
             switchScreen('chat');
             DOMElements.roomCodeDisplay.textContent = roomCode;
             DOMElements.messagesList.innerHTML = '';
             DOMElements.messagesList.appendChild(DOMElements.typingIndicatorContainer);
-            
             initializePresence();
             
             const messagesRef = query(ref(db, `messages/${currentRoom}`), orderByKey());
-            const unsubMessages = onChildAdded(messagesRef, s => renderMessage(s.val(), s.key));
+            const unsubMessages = onChildAdded(messagesRef, s => {
+                const data = s.val(); renderMessage(data, s.key); checkAndNotify(data);
+            });
             const unsubChanged = onChildChanged(messagesRef, s => renderMessage(s.val(), s.key));
-            
             const unsubPresence = onValue(ref(db, `presence/${currentRoom}`), snapshot => {
-                const data = snapshot.val() || {};
-                onlineUsersInRoom = data;
-                updatePresenceUI(data);
+                const data = snapshot.val() || {}; onlineUsersInRoom = data; updatePresenceUI(data);
             });
-            
             const unsubTyping = onValue(ref(db, `typing/${currentRoom}`), snapshot => {
-                const typingUsers = snapshot.val() || {};
-                delete typingUsers[userId];
-                renderTypingIndicator(typingUsers);
+                const typingUsers = snapshot.val() || {}; delete typingUsers[userId]; renderTypingIndicator(typingUsers);
             });
-
             roomUnsubscribes.push(unsubPresence, unsubTyping, unsubMessages, unsubChanged);
         };
 
         const updatePresenceUI = (users) => {
             const online = Object.entries(users).filter(([, u]) => u && u.isOnline);
             DOMElements.userCountDisplay.textContent = `${online.length} online`;
-            
-            const container = DOMElements.userAvatarsContainer;
-            container.innerHTML = '';
+            const container = DOMElements.userAvatarsContainer; container.innerHTML = '';
             online.slice(0, 4).forEach(([id, user]) => {
                 if (!user.nickname) return;
                 const div = document.createElement('div');
@@ -1211,26 +1321,14 @@
 
         const cleanupRoomListeners = async () => {
             if (presenceRef) await set(presenceRef, null);
-            roomUnsubscribes.forEach(unsub => unsub());
-            roomUnsubscribes = [];
+            roomUnsubscribes.forEach(unsub => unsub()); roomUnsubscribes = [];
         };
 
-        const leaveRoom = async () => {
-            await cleanupRoomListeners();
-            currentRoom = null;
-            switchScreen('lobby');
-        };
-
-        /* ========================
-           SYSTEM UTIL
-           ======================== */
+        const leaveRoom = async () => { await cleanupRoomListeners(); currentRoom = null; switchScreen('lobby'); };
 
         const initializeUser = () => {
             let storedUserId = localStorage.getItem('astroUserId');
-            if (!storedUserId) {
-                storedUserId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-                localStorage.setItem('astroUserId', storedUserId);
-            }
+            if (!storedUserId) { storedUserId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`; localStorage.setItem('astroUserId', storedUserId); }
             userId = storedUserId;
         };
 
@@ -1254,118 +1352,59 @@
         };
 
         const renderRoomList = () => {
-            const list = DOMElements.roomListContainer;
-            list.innerHTML = '';
+            const list = DOMElements.roomListContainer; list.innerHTML = '';
             const allRooms = JSON.parse(localStorage.getItem("recentRooms") || "[]");
-
             if (allRooms.length === 0) {
-                list.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-muted-color opacity-50 mt-10"><i class="fas fa-wind text-4xl mb-2"></i><p>Nenhuma sala recente.</p></div>`;
-                return;
+                list.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-muted-color opacity-50 mt-10"><i class="fas fa-wind text-4xl mb-2"></i><p>Nenhuma sala recente.</p></div>`; return;
             }
-
             allRooms.forEach(roomCode => {
                 const el = document.createElement('div');
                 el.className = "flex items-center p-4 bg-[var(--surface-color)] rounded-xl cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 mb-2";
-                el.innerHTML = `
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md mr-3">
-                        <i class="fas fa-hashtag"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="font-bold text-[var(--text-color)]">#${roomCode}</h3>
-                        <p class="text-xs text-muted-color">Clique para entrar</p>
-                    </div>
-                    <button class="del-room w-8 h-8 rounded-full hover:text-red-500"><i class="fas fa-trash"></i></button>
-                `;
-                el.onclick = (e) => {
-                    if (e.target.closest('.del-room')) {
-                        e.stopPropagation();
-                        const n = allRooms.filter(r => r !== roomCode);
-                        localStorage.setItem("recentRooms", JSON.stringify(n));
-                        renderRoomList();
-                    } else joinRoom(roomCode);
-                };
+                el.innerHTML = `<div class="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md mr-3"><i class="fas fa-hashtag"></i></div><div class="flex-1"><h3 class="font-bold text-[var(--text-color)]">#${roomCode}</h3><p class="text-xs text-muted-color">Clique para entrar</p></div><button class="del-room w-8 h-8 rounded-full hover:text-red-500"><i class="fas fa-trash"></i></button>`;
+                el.onclick = (e) => { if (e.target.closest('.del-room')) { e.stopPropagation(); const n = allRooms.filter(r => r !== roomCode); localStorage.setItem("recentRooms", JSON.stringify(n)); renderRoomList(); } else joinRoom(roomCode); };
                 list.appendChild(el);
             });
         };
 
         const updateRecentRooms = (roomCode) => {
             let recent = JSON.parse(localStorage.getItem("recentRooms") || "[]").filter(r => r !== roomCode);
-            recent.unshift(roomCode);
-            localStorage.setItem("recentRooms", JSON.stringify(recent.slice(0, 10)));
+            recent.unshift(roomCode); localStorage.setItem("recentRooms", JSON.stringify(recent.slice(0, 10)));
         };
 
         const showToast = (msg, type='info') => {
-            const toast = document.createElement('div');
-            toast.className = 'toast';
+            const toast = document.createElement('div'); toast.className = 'toast';
             let icon = type === 'success' ? 'fa-check-circle text-green-400' : 'fa-info-circle';
             toast.innerHTML = `<i class="fas ${icon}"></i><span>${msg}</span>`;
-            DOMElements.toastContainer.appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
+            DOMElements.toastContainer.appendChild(toast); setTimeout(() => toast.remove(), 4000);
         };
 
-        // Eventos DOM
         document.getElementById('save-nickname-btn').onclick = async () => {
             const val = DOMElements.nicknameInput.value.trim();
             const langVal = DOMElements.introLangSelector.value;
-
             if(val) { 
                 await updateNicknameHistory(val);
                 localStorage.setItem('astroNickname', val);
-                
-                // Salva idioma escolhido
                 localStorage.setItem('astroUserLang', langVal);
-                currentTranslationLang = langVal;
-                DOMElements.roomLangSelector.value = langVal;
-
                 location.reload(); 
             }
         };
 
-        document.getElementById('change-nickname-btn').onclick = () => {
-            localStorage.removeItem('astroNickname'); location.reload();
-        };
-
-        // NOVO: Limpar Dados
-        DOMElements.clearDataBtn.onclick = () => {
-            if(confirm('Tem certeza? Todos os dados salvos neste navegador serão perdidos.')) {
-                localStorage.clear();
-                location.reload();
-            }
-        };
-
-        document.getElementById('new-conversation-btn').onclick = () => {
-            DOMElements.roomActionsModal.classList.remove('hidden'); DOMElements.roomActionsModal.classList.add('flex');
-        };
-        document.getElementById('close-room-actions-modal-btn').onclick = () => {
-            DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex');
-        };
-        document.getElementById('modal-create-room-btn').onclick = () => {
-            const code = Math.random().toString(36).substring(2, 7).toUpperCase();
-            updateRecentRooms(code); joinRoom(code);
-            DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex');
-            navigator.clipboard.writeText(code);
-        };
-        document.getElementById('modal-confirm-join-btn').onclick = () => {
-            const code = DOMElements.modalRoomCodeInput.value.trim().toUpperCase();
-            if(code) { joinRoom(code); DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); }
-        };
-        document.getElementById('settings-btn').onclick = () => {
-            DOMElements.settingsModal.classList.remove('hidden'); DOMElements.settingsModal.classList.add('flex');
-        };
-        document.getElementById('close-settings-modal-btn').onclick = () => {
-            DOMElements.settingsModal.classList.add('hidden'); DOMElements.settingsModal.classList.remove('flex');
-        };
-        document.querySelectorAll('.theme-btn').forEach(btn => btn.onclick = () => {
-            localStorage.setItem('astroTheme', btn.dataset.theme); location.reload();
-        });
+        document.getElementById('change-nickname-btn').onclick = () => { localStorage.removeItem('astroNickname'); location.reload(); };
+        DOMElements.clearDataBtn.onclick = () => { if(confirm('Tem certeza?')) { localStorage.clear(); location.reload(); } };
+        DOMElements.notifBtn.onclick = unlockAudioAndRequestPermission;
+        document.body.addEventListener('click', () => { if(!audioUnlocked) unlockAudioAndRequestPermission(); }, { once: true });
+        
+        document.getElementById('new-conversation-btn').onclick = () => { DOMElements.roomActionsModal.classList.remove('hidden'); DOMElements.roomActionsModal.classList.add('flex'); };
+        document.getElementById('close-room-actions-modal-btn').onclick = () => { DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); };
+        document.getElementById('modal-create-room-btn').onclick = () => { const code = Math.random().toString(36).substring(2, 7).toUpperCase(); updateRecentRooms(code); joinRoom(code); DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); navigator.clipboard.writeText(code); };
+        document.getElementById('modal-confirm-join-btn').onclick = () => { const code = DOMElements.modalRoomCodeInput.value.trim().toUpperCase(); if(code) { joinRoom(code); DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); } };
+        document.getElementById('settings-btn').onclick = () => { DOMElements.settingsModal.classList.remove('hidden'); DOMElements.settingsModal.classList.add('flex'); };
+        document.getElementById('close-settings-modal-btn').onclick = () => { DOMElements.settingsModal.classList.add('hidden'); DOMElements.settingsModal.classList.remove('flex'); };
+        document.querySelectorAll('.theme-btn').forEach(btn => btn.onclick = () => { localStorage.setItem('astroTheme', btn.dataset.theme); location.reload(); });
         document.getElementById('send-btn').onclick = sendMessage;
-        document.getElementById('message-input').onkeydown = (e) => {
-            if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-        };
+        document.getElementById('message-input').onkeydown = (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
         document.getElementById('leave-btn').onclick = leaveRoom;
-        document.querySelector('.room-code-value').onclick = () => {
-            navigator.clipboard.writeText(currentRoom); showToast("Código copiado!");
-        };
+        document.querySelector('.room-code-value').onclick = () => { navigator.clipboard.writeText(currentRoom); showToast("Código copiado!"); };
     </script>
 </body>
 </html>
