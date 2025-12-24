@@ -283,8 +283,12 @@ body[data-bg-style="matrix"] {
     cursor: pointer;
     display: flex;
     flex-direction: column;
+    white-space: break-spaces;
 }
 
+.nickname-display {
+    white-space: nowrap;
+}
 .items-end .chat-bubble {
     background-color: var(--bubble-self-bg);
     color: var(--bubble-self-text);
@@ -427,4 +431,15 @@ body[data-bg-style="matrix"] {
 .grammar-check-btn
 {
     background: #334155;
+}
+
+.speak-btn {
+    line-height: 1;
+    user-select: none;
+    white-space: nowrap;
+    margin-top: 5px;
+}
+
+.speak-btn i {
+    font-size: 0.8rem;
 }

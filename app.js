@@ -253,6 +253,8 @@ const renderTypingIndicator = (typingUsers) => {
 const performTranslation = async (msgId, originalText, lang) => {
     const el = document.getElementById(`trans-${msgId}`);
     if (!el) return;
+    // Se já tiver texto traduzido e não for spinner, evita re-traduzir desnecessariamente se o idioma for o mesmo
+    // Mas aqui como é chamada ao renderizar, mantemos o spinner se necessário.
     if (!el.textContent || el.querySelector('.fa-spin')) el.innerHTML = '<i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i>';
 
     try {
@@ -285,7 +287,14 @@ const retranslateAllMessages = (newLang) => {
 const renderMessage = (msgData, msgId) => {
     if (!msgData || !msgData.text) return;
 
+    // --- CORREÇÃO DE DUPLICAÇÃO ---
+    // Verificamos se a mensagem já existe no DOM.
+    // Isso acontece quando o Firebase dispara 'onChildChanged' (ex: atualização de timestamp).
+    const existingMsgEl = document.querySelector(`.message-wrapper[data-msg-id="${msgId}"]`);
+
     const isSelf = msgData.userId === userId;
+    // Se estamos atualizando, mantemos a lógica visual anterior ou reavaliamos se for necessário
+    // Simplificação: recalculamos isSameUserAsPrevious apenas para novos elementos ou assumimos desconectado
     const isSameUserAsPrevious = lastRenderedUserId === msgData.userId;
 
     const messageWrapper = document.createElement('div');
@@ -293,21 +302,29 @@ const renderMessage = (msgData, msgId) => {
     messageWrapper.dataset.msgId = msgId;
     messageWrapper.dataset.userId = msgData.userId;
 
-    if (isSameUserAsPrevious) {
+    // Se estiver substituindo, tentamos preservar a classe 'grouped-message' se ela já existia
+    if (existingMsgEl && existingMsgEl.classList.contains('grouped-message')) {
+        messageWrapper.classList.add('grouped-message');
+    } else if (!existingMsgEl && isSameUserAsPrevious) {
         messageWrapper.classList.add('grouped-message');
     }
 
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble selectable-text';
-    
+
     if (!userColors[msgData.userId]) userColors[msgData.userId] = `hsl(${Math.random() * 360}, 70%, 60%)`;
 
     let contentHTML = '';
     if (msgData.repliedTo) {
-       contentHTML += `<div class="mb-1 pl-2 border-l-2 border-white/30 text-xs opacity-70"><strong class="block">${msgData.repliedTo.nickname}</strong><span class="truncate block max-w-[200px]">${msgData.repliedTo.text}</span></div>`;
+       contentHTML += `<div class="mb-2 pl-2 border-l-2 border-white/30 text-xs opacity-70"><strong class="block" style="white-space: nowrap;">${msgData.repliedTo.nickname}</strong><span class="truncate block max-w-[200px]">${msgData.repliedTo.text}</span></div>`;
     }
 
-    if (!isSelf && !isSameUserAsPrevious) {
+    // Só mostra o nome se não for eu e não for agrupada (mesmo usuário anterior)
+    // Nota: Ao substituir (update), a lógica de agrupamento visual pode ficar ligeiramente imprecisa sem re-renderizar a lista toda,
+    // mas para evitar duplicidade, substituir o elemento é o correto.
+    const showName = !isSelf && (!existingMsgEl ? !isSameUserAsPrevious : !messageWrapper.classList.contains('grouped-message'));
+
+    if (showName) {
         contentHTML += `<div class="nickname-display text-xs font-bold mb-1 opacity-90"
             style="color: ${userColors[msgData.userId]};">
             ${msgData.nickname}
@@ -317,8 +334,30 @@ const renderMessage = (msgData, msgId) => {
     const safeText = msgData.text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, '<br>');
     const translationId = `trans-${msgId}`;
     
-    contentHTML += `<div id="${translationId}" class="translated-text"><i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i></div><div class="original-text">${safeText}</div>`;
-    
+    // Se já existia, podemos tentar recuperar a tradução atual para não piscar o loading
+    let currentTrans = '';
+    if (existingMsgEl) {
+        const oldTransEl = existingMsgEl.querySelector('.translated-text');
+        if (oldTransEl) currentTrans = oldTransEl.innerHTML;
+    }
+
+   contentHTML += `
+    <div class="flex items-start gap-2">
+        <div id="${translationId}" class="translated-text flex-1">
+            ${currentTrans || '<i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i>'}
+        </div>
+
+        <button 
+            class="speak-btn text-xs opacity-60 hover:opacity-100 transition"
+            title="Ouvir tradução"
+            data-msg-id="${msgId}">
+            <i class="fas fa-volume-high"></i>
+        </button>
+    </div>
+
+    <div class="original-text">${safeText}</div>
+    `;
+
     const time = new Date(msgData.timestamp).toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit'
@@ -332,6 +371,20 @@ const renderMessage = (msgData, msgId) => {
     `;
 
     bubble.innerHTML = contentHTML;
+    const speakBtn = bubble.querySelector('.speak-btn');
+
+    if (speakBtn) {
+        speakBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        });
+
+        speakBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            speakTranslatedMessage(msgId);
+        });
+    }
 
     if(!isSelf) {
         messageWrapper.appendChild(bubble);
@@ -342,18 +395,83 @@ const renderMessage = (msgData, msgId) => {
     }
 
     bubble.addEventListener('click', (e) => {
-        if(window.getSelection().toString().length > 0) return;
-        e.stopPropagation();
+        if (e.target.closest('.speak-btn')) return;
+        if (window.getSelection().toString().length > 0) return;
+
         openActionsMenu(bubble, msgId, msgData.text);
     });
 
-    DOMElements.messagesList.insertBefore(messageWrapper, DOMElements.typingIndicatorContainer);
-    scrollToBottom();
-    performTranslation(msgId, msgData.text, currentTranslationLang);
+    if (existingMsgEl) {
+        // SUBSTITUI a mensagem existente em vez de adicionar uma nova
+        DOMElements.messagesList.replaceChild(messageWrapper, existingMsgEl);
+        // Se não tinha tradução (era loading ou nova), busca agora
+        if (currentTrans.includes('fa-spin') || !currentTrans) {
+            performTranslation(msgId, msgData.text, currentTranslationLang);
+        }
+    } else {
+        // Adiciona nova mensagem
+        DOMElements.messagesList.insertBefore(messageWrapper, DOMElements.typingIndicatorContainer);
+        scrollToBottom();
+        performTranslation(msgId, msgData.text, currentTranslationLang);
+    }
+
     lastRenderedUserId = msgData.userId;
 };
 
 // --- Actions & Modals ---
+
+function speakTranslatedMessage(msgId) {
+    const transEl = document.getElementById(`trans-${msgId}`);
+    if (!transEl) return;
+
+    // ⚠️ Extrai SOMENTE texto real
+    const text = transEl.textContent.replace(/\s+/g, ' ').trim();
+
+    if (!text || text.length < 2) {
+        console.warn('Nada para falar');
+        return;
+    }
+
+    // Cancela qualquer fala anterior
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    const langMap = {
+        pt: 'pt-BR',
+        en: 'en-US',
+        es: 'es-ES',
+        fr: 'fr-FR',
+        de: 'de-DE',
+        it: 'it-IT',
+        ja: 'ja-JP',
+        zh: 'zh-CN',
+        ru: 'ru-RU',
+        ar: 'ar-SA'
+    };
+
+    const targetLang = langMap[currentTranslationLang] || 'en-US';
+    utterance.lang = targetLang;
+    utterance.rate = 1;
+    utterance.pitch = 1;
+
+    // 🔊 GARANTIR que existe uma voz compatível
+    const voices = speechSynthesis.getVoices();
+
+    const voice =
+        voices.find(v => v.lang === targetLang) ||
+        voices.find(v => v.lang.startsWith(targetLang.split('-')[0])) ||
+        voices.find(v => v.lang.startsWith('en'));
+
+    if (voice) {
+        utterance.voice = voice;
+    } else {
+        console.warn('Nenhuma voz compatível encontrada');
+    }
+
+    speechSynthesis.speak(utterance);
+}
+
 
 const openActionsMenu = (triggerEl, msgId, text) => {
     if(activeMessageMenu) activeMessageMenu.remove();
@@ -361,6 +479,13 @@ const openActionsMenu = (triggerEl, msgId, text) => {
     menu.className = 'options-menu';
     
     const options = [
+        {
+            icon: 'fa-reply',
+            label: 'Responder',
+            action: () => {
+                startReply(msgId, text);
+            }
+        },
         { icon: 'fa-language', label: 'Retraduzir', class: 'opt-translate', action: () => handleAction('translate', text, msgId) },
         { icon: 'fa-lightbulb', label: 'Contexto', class: 'opt-context', action: () => handleAction('context', text, msgId) },
         { icon: 'fa-graduation-cap', label: 'Estudar', class: 'opt-study', action: () => handleAction('study', text, msgId) },
@@ -397,6 +522,40 @@ const openActionsMenu = (triggerEl, msgId, text) => {
     };
     setTimeout(() => document.addEventListener('click', closeMenu), 100);
 };
+
+function startReply(msgId, text) {
+    const msgEl = document.querySelector(`.message-wrapper[data-msg-id="${msgId}"]`);
+    if (!msgEl) return;
+
+    const nicknameEl = msgEl.querySelector('.nickname-display');
+    const nickname = nicknameEl ? nicknameEl.textContent : 'Você';
+
+    replyingToMessage = {
+        msgId,
+        nickname,
+        text
+    };
+
+    DOMElements.replyPreview.innerHTML = `
+        <div class="flex justify-between items-start gap-2">
+            <div class="flex-1">
+                <div class="text-xs font-bold opacity-80">${nickname}</div>
+                <div class="text-xs truncate opacity-70">${text}</div>
+            </div>
+            <button id="cancel-reply" class="text-xs opacity-60 hover:opacity-100">&times;</button>
+        </div>
+    `;
+    DOMElements.replyPreview.classList.remove('hidden');
+
+    document.getElementById('cancel-reply').onclick = clearReply;
+    DOMElements.messageInput.focus();
+}
+function clearReply() {
+    replyingToMessage = null;
+    DOMElements.replyPreview.classList.add('hidden');
+    DOMElements.replyPreview.innerHTML = '';
+}
+
 
 async function handleAction(type, text, msgId = null) {
     const targetLang = currentTranslationLang; 
@@ -518,6 +677,12 @@ window.onload = async () => {
             localStorage.setItem('astroBgStyle', e.target.value);
         });
     }
+
+    if ('speechSynthesis' in window) {
+    speechSynthesis.onvoiceschanged = () => {
+        speechSynthesis.getVoices();
+    };
+}
 };
 
 // Event Listeners Binding
@@ -598,21 +763,30 @@ DOMElements.grammarBtn.addEventListener('click', async () => {
     }
 });
 
-const sendMessage = () => {
-    const text = DOMElements.messageInput.value.trim();
+const sendMessage = async () => {
+   const text = DOMElements.messageInput.value.trim();
     if (!text || !currentRoom) return;
-    const newMessage = { userId, nickname, text, timestamp: serverTimestamp() };
-    if(replyingToMessage) newMessage.repliedTo = replyingToMessage;
-    push(ref(db, `messages/${currentRoom}`), newMessage);
-    
-    // Limpar input
-    DOMElements.messageInput.value = '';
-    DOMElements.messageInput.style.height = 'auto';
 
-    // FIX: Remove o status de "digitando" imediatamente do Firebase
-    const typingRef = ref(db, `typing/${currentRoom}/${userId}`);
-    set(typingRef, null);
-    if (typingTimeout) clearTimeout(typingTimeout);
+    const payload = {
+        text,
+        nickname,
+        userId,
+        timestamp: Date.now()
+    };
+
+    // 🔁 SE estiver respondendo alguém
+    if (replyingToMessage) {
+        payload.repliedTo = {
+            msgId: replyingToMessage.msgId,
+            nickname: replyingToMessage.nickname,
+            text: replyingToMessage.text
+        };
+    }
+
+    await push(ref(db, `messages/${currentRoom}`), payload);
+
+    DOMElements.messageInput.value = '';
+    clearReply();
 };
 
 // Botões Gerais
@@ -638,7 +812,9 @@ document.getElementById('modal-confirm-join-btn').onclick = () => { const code =
 document.getElementById('settings-btn').onclick = () => { DOMElements.settingsModal.classList.remove('hidden'); DOMElements.settingsModal.classList.add('flex'); };
 document.getElementById('close-settings-modal-btn').onclick = () => { DOMElements.settingsModal.classList.add('hidden'); DOMElements.settingsModal.classList.remove('flex'); };
 document.querySelectorAll('.theme-btn').forEach(btn => btn.onclick = () => { localStorage.setItem('astroTheme', btn.dataset.theme); location.reload(); });
+
 document.getElementById('send-btn').onclick = sendMessage;
+
 document.getElementById('message-input').onkeydown = (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
 document.getElementById('leave-btn').onclick = leaveRoom;
 document.querySelector('.room-code-value').onclick = () => { navigator.clipboard.writeText(currentRoom); showToast("Código copiado!"); };

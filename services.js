@@ -4,7 +4,7 @@ import { LANG_MAP } from './config.js';
 const translationCache = {};
 
 // Função auxiliar para Timeout em fetch
-async function fetchWithTimeout(url, timeout = 10000) {
+async function fetchWithTimeout(url, timeout = 500000) {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
     try {
@@ -62,19 +62,64 @@ export async function verificarGramatica(texto) {
 
 export async function traduzir(texto, targetLang) {
     const cacheKey = `${texto}_${targetLang}`;
-    if(translationCache[cacheKey]) return translationCache[cacheKey];
+    if (translationCache[cacheKey]) return translationCache[cacheKey];
 
     const idioma = LANG_MAP[targetLang] || targetLang;
-    const prompt = `Traduza o texto a seguir para  ${idioma}: "${texto}". Produza SOMENTE a tradução, sem comentários ou explicações`;
-    
+
+    const prompt = `
+        Aja como um linguista profissional.
+
+        Analise o texto abaixo:
+
+        "${texto}"
+
+        Retorne APENAS um JSON neste formato exato:
+
+        {
+            "ja_esta_no_idioma": boolean,
+            "traducao": "string ou null",
+            "tem_erros": boolean,
+            "texto_corrigido": "string ou null",
+            "explicacao": "string ou null"
+        }
+
+        REGRAS:
+        - Se o texto NÃO estiver em ${idioma}:
+        - "traducao" deve conter a tradução para ${idioma}
+        - os demais campos podem ser null
+        - Se o texto JÁ estiver em ${idioma}:
+        - NÃO traduza
+        - Verifique erros de digitação, gramática ou clareza
+        - Explique as correções de forma simples
+        - Nunca inclua texto fora do JSON.        
+    `;
+
     try {
         const res = await aiRequest(prompt, false);
-        translationCache[cacheKey] = res;
-        return res;
-    } catch(e) {
+        const data = extractJSON(res);
+        console.log("Resposta tradução/revisão:", data);
+        let resultado;
+
+        if (!data.ja_esta_no_idioma) {
+            resultado = data.traducao || texto;
+        } else if (data.tem_erros) {
+            resultado =
+                `✏️ Revisão detectada:\n\n` +
+                `Forma sugerida:\n${data.texto_corrigido}\n\n` +
+                `Explicação:\n${data.explicacao}`;
+        } else {
+           resultado = data.traducao || texto;
+        }
+
+        translationCache[cacheKey] = resultado;
+        return resultado;
+
+    } catch (e) {
+        console.error("Erro na tradução/revisão:", e);
         return texto;
     }
 }
+
 
 export async function analisarContexto(texto, targetLang) {
     const idioma = LANG_MAP[targetLang] || "português";
