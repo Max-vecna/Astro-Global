@@ -19,31 +19,49 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
-  // Estratégia Stale-While-Revalidate para conteúdo principal
+  const url = new URL(event.request.url);
+
+  // 1. Ignorar requisições que não sejam GET (POST, PUT, DELETE, etc.)
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // 2. Ignorar APIs externas dinâmicas e Firebase
+  // Isso evita que o SW tente cachear ou interceptar conexões de banco de dados/IA
+  if (url.hostname.includes('firebaseio.com') || 
+      url.hostname.includes('googleapis.com') ||
+      url.hostname.includes('pollinations.ai')) {
+      return;
+  }
+
+  // 3. Estratégia Stale-While-Revalidate para arquivos estáticos e App Shell
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       const fetchPromise = fetch(event.request).then(networkResponse => {
-        caches.open(CACHE_NAME).then(cache => {
-             // Cache apenas requests válidos e do mesmo domínio ou CDNs conhecidos
-             if (networkResponse.status === 200) {
-                 cache.put(event.request, networkResponse.clone());
-             }
-        });
+        // Apenas cacheia se a resposta for válida (status 200) e do tipo basic/cors
+        if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, responseToCache);
+            });
+        }
         return networkResponse;
-      }).catch(() => cachedResponse); // Retorna cache se falhar a rede
+      }).catch((error) => {
+        // Se a rede falhar, apenas loga e retorna o cache se disponível
+        // console.warn('Fetch falhou no SW:', event.request.url);
+        return cachedResponse; 
+      });
 
       return cachedResponse || fetchPromise;
     })
   );
 });
 
-// Listener de Notificação Push (fallback se enviado pelo servidor, 
-// embora neste caso usamos o envio local via registration.showNotification)
+// Listener de Notificação Push
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   event.waitUntil(
     clients.matchAll({type: 'window'}).then( windowClients => {
-        // Foca na janela se já estiver aberta
         for (var i = 0; i < windowClients.length; i++) {
             var client = windowClients[i];
             if (client.url === '/' && 'focus' in client) {
