@@ -171,9 +171,59 @@ export async function handleAction(type, text, msgId = null) {
             const vars = await Services.gerarVariacoes(text, targetLang); 
             showGenericModal('Variações', vars.map(v => `• ${v}`).join('<br><br>'));
         } else if (type === 'study') {
-            openStudyModal(text);
+            openStudyChoiceModal(text, msgId);
         }
+
     } catch (e) { console.error(e); Utils.showToast("Erro na IA.", "error"); }
+}
+
+export function openStudyChoiceModal(originalText, msgId) {
+    const translatedEl = document.getElementById(`trans-${msgId}`);
+    const translatedText = translatedEl?.textContent?.trim();
+
+    DOMElements.genericModalTitle.textContent = "Estudar frase";
+
+    DOMElements.genericModalContent.innerHTML = `
+        <div class="flex flex-col gap-3">
+            <button id="study-original-btn"
+                class="p-3 rounded-xl bg-indigo-600 hover:opacity-90 text-white font-semibold">
+                📘 Estudar texto original
+            </button>
+
+            ${translatedText ? `
+            <button id="study-translation-btn"
+                class="p-3 rounded-xl bg-emerald-600 hover:opacity-90 text-white font-semibold">
+                🌍 Estudar tradução
+            </button>` : ''}
+
+            <button id="cancel-study-btn"
+                class="p-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white">
+                Cancelar
+            </button>
+        </div>
+    `;
+
+    DOMElements.genericModal.classList.remove('hidden');
+    DOMElements.genericModal.classList.add('flex');
+
+    document.getElementById('cancel-study-btn').onclick = closeGeneric;
+
+    document.getElementById('study-original-btn').onclick = () => {
+        closeGeneric();
+        openStudyModal(originalText);
+    };
+
+    if (translatedText) {
+        document.getElementById('study-translation-btn').onclick = () => {
+            closeGeneric();
+            openStudyModal(translatedText);
+        };
+    }
+}
+
+function closeGeneric() {
+    DOMElements.genericModal.classList.add('hidden');
+    DOMElements.genericModal.classList.remove('flex');
 }
 
 // --- Gramática ---
