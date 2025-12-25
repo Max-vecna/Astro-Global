@@ -1,54 +1,74 @@
-const CACHE_NAME = "astro-chat-v1";
+const CACHE_NAME = "astro-chat-v2"; // Mudei para v2 para forçar atualização
 const OFFLINE_URLS = [
-  "./",
   "./index.html",
   "./manifest.json",
+  "./styles.css",
+  "./app.js",
+  "./config.js",
+  "./state.js",
+  "./dom.js",
+  "./utils.js",
+  "./services.js",
+  "./chat.js",
+  "./room.js",
+  "./modals.js",
   "https://cdn.tailwindcss.com",
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(OFFLINE_URLS))
+    caches.open(CACHE_NAME).then(cache => {
+      // addAll falha se qualquer um desses arquivos não existir ou der erro de rede
+      return cache.addAll(OFFLINE_URLS);
+    }).catch(error => {
+      console.error("Falha ao cachear arquivos no SW:", error);
+    })
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
 
-  // 1. Ignorar requisições que não sejam GET (POST, PUT, DELETE, etc.)
+  // 1. Ignorar requisições que não sejam GET
   if (event.request.method !== 'GET') {
     return;
   }
 
   // 2. Ignorar APIs externas dinâmicas e Firebase
-  // Isso evita que o SW tente cachear ou interceptar conexões de banco de dados/IA
   if (url.hostname.includes('firebaseio.com') || 
       url.hostname.includes('googleapis.com') ||
       url.hostname.includes('pollinations.ai')) {
       return;
   }
 
-  // 3. Estratégia Stale-While-Revalidate para arquivos estáticos e App Shell
+  // 3. Estratégia Stale-While-Revalidate
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       const fetchPromise = fetch(event.request).then(networkResponse => {
-        // Apenas cacheia se a resposta for válida (status 200) e do tipo basic/cors
-        if (networkResponse && networkResponse.status === 200) {
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then(cache => {
                 cache.put(event.request, responseToCache);
             });
         }
         return networkResponse;
-      }).catch((error) => {
-        // Se a rede falhar, apenas loga e retorna o cache se disponível
-        // console.warn('Fetch falhou no SW:', event.request.url);
+      }).catch(() => {
         return cachedResponse; 
       });
 

@@ -347,7 +347,6 @@ body[data-bg-style="matrix"] {
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    white-space: break-spaces;
 }
 
 .nickname-display {
@@ -376,6 +375,7 @@ body[data-bg-style="matrix"] {
     font-weight: 500;
     margin-bottom: 4px;
     min-height: 1.2em;
+    white-space: break-spaces;
 }
 
 .original-text {
@@ -616,4 +616,309 @@ body[data-bg-style="cybergrid"] {
 @keyframes gridScroll {
     from { background-position: 0 0; }
     to { background-position: 0 500px; }
+}
+
+
+/* Pequeno aviso visual */
+.message-wrapper.chat-bubble::after {
+    content: "⚠ revisão necessária";
+    font-size: 0.65rem;
+    color: #f87171;
+    margin-top: 2px;
+    margin-left: 6px;
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: inherit;
+}
+
+/* Corrige espaço extra quando está carregando */
+.translated-text:has(.fa-spin) {
+    min-height: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    display: flex;
+    align-items: center;
+}
+
+.translated-text.loading {
+    min-height: 0;
+    margin-bottom: 5px;
+    padding-bottom: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* Botão de áudio oculto até tradução pronta */
+.speak-btn {
+    display: none;
+}
+
+/* Quando a tradução estiver pronta */
+.speak-btn.ready {
+    display: inline-flex;
+}
+
+/* =========================================================
+   ESTADOS DE ERRO — VARIAM POR ESTILO DE BALÃO
+   Usa: .message-wrapper.has-correction
+========================================================= */
+
+/* ---------- ASTRO (padrão) ---------- */
+body[data-bubble-style="astro"] .has-correction .chat-bubble {
+    border: 2px solid #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+    box-shadow: 0 0 0 2px rgba(239,68,68,0.25);
+}
+body[data-bubble-style="astro"] .has-correction .translated-text {
+    color: #fecaca;
+}
+
+/* ---------- MODERN ---------- */
+body[data-bubble-style="modern"] .has-correction .chat-bubble {
+    background: linear-gradient(135deg, #7f1d1d, #ef4444);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(239,68,68,0.4);
+}
+
+/* ---------- CYBER ---------- */
+body[data-bubble-style="cyber"] .has-correction .chat-bubble {
+    border-color: #ff004c;
+    color: #ff004c;
+    box-shadow: 0 0 12px #ff004c;
+    text-shadow: 0 0 4px #ff004c;
+}
+
+/* ---------- NEON ---------- */
+body[data-bubble-style="neon"] .has-correction .chat-bubble {
+    border-color: #ff004c;
+    box-shadow:
+        0 0 10px #ff004c,
+        inset 0 0 8px #ff004c;
+    color: #ffb3c7;
+}
+
+/* ---------- PIXEL ---------- */
+body[data-bubble-style="pixel"] .has-correction .chat-bubble {
+    background: #7f1d1d;
+    color: #ffffff;
+    border-color: #ffffff;
+    box-shadow: 4px 4px 0 #000;
+}
+
+/* ---------- CLASSIC ---------- */
+body[data-bubble-style="classic"] .has-correction .chat-bubble {
+    background-color: #b91c1c;
+    color: #ffffff;
+}
+
+/* ---------- SOFT ---------- */
+body[data-bubble-style="soft"] .has-correction .chat-bubble {
+    background: rgba(239,68,68,0.25);
+    border: 2px solid rgba(239,68,68,0.5);
+    box-shadow: 0 6px 18px rgba(239,68,68,0.25);
+}
+
+/* ---------- COMIC ---------- */
+body[data-bubble-style="comic"] .has-correction .chat-bubble {
+    background: #ff4d4d;
+    color: black;
+    border: 3px solid black;
+    box-shadow: 4px 4px 0 black;
+}
+
+/* ---------- GLASS ---------- */
+body[data-bubble-style="glass"] .has-correction .chat-bubble {
+    background: rgba(255, 0, 0, 0.25);
+    border: 1px solid rgba(255, 100, 100, 0.6);
+    backdrop-filter: blur(12px);
+}
+
+/* ---------- PAPER ---------- */
+body[data-bubble-style="paper"] .has-correction .chat-bubble {
+    background: #fee2e2;
+    border: 2px dashed #dc2626;
+    color: #7f1d1d;
+}
+
+/* ---------- TERMINAL ---------- */
+body[data-bubble-style="terminal"] .has-correction .chat-bubble {
+    color: #ff5555;
+    border-color: #ff5555;
+    box-shadow: 0 0 8px rgba(255,85,85,0.6);
+}
+
+/* ---------- RPG ---------- */
+body[data-bubble-style="rpg"] .has-correction .chat-bubble {
+    border-color: #ffcc00;
+    background: #5a1d1d;
+    color: #ffe8a3;
+    box-shadow: inset 0 0 12px rgba(255,204,0,0.4);
+}
+
+/* ---------- BUBBLEGUM ---------- */
+body[data-bubble-style="bubblegum"] .has-correction .chat-bubble {
+    background: linear-gradient(135deg, #ff6b6b, #ffb3c6);
+    color: #5a0000;
+    border: 3px solid #ffffff;
+}
+
+/* ---------- BRUTALIST ---------- */
+body[data-bubble-style="brutalist"] .has-correction .chat-bubble {
+    background: red !important;
+    color: white;
+    border: 6px solid black;
+    box-shadow: 10px 10px 0 black;
+}
+
+/* ---------- HOLOGRAM ---------- */
+body[data-bubble-style="hologram"] .has-correction .chat-bubble {
+    border-color: #ff4dff;
+    color: #ffd6ff;
+    text-shadow: 0 0 10px #ff4dff;
+    box-shadow: 0 0 20px rgba(255,77,255,0.6);
+}
+
+/* =========================================================
+   FUNDOS DO CHAT (ESTILO WHATSAPP E VARIAÇÕES)
+   Aplica SOMENTE no #messages-container
+========================================================= */
+
+#messages-container {
+    background-size: cover;
+    background-position: center;
+    background-repeat: repeat;
+    transition: background 0.3s ease;
+}
+
+/* ===============================
+   WHATSAPP (PADRÃO ESCURO)
+================================ */
+body[data-chat-bg="whatsapp"] #messages-container, body[data-chat-bg="whatsapp"] #preview-background {
+    background-color: #0b141a;
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.04) 1px, transparent 1px),
+        radial-gradient(circle at 80% 80%, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+/* ===============================
+   WHATSAPP CLARO
+================================ */
+body[data-chat-bg="whatsapp-light"] #messages-container, body[data-chat-bg="whatsapp-light"] #preview-background {
+    background-color: #efeae2;
+    background-image: url("https://www.transparenttextures.com/patterns/paper-fibers.png");
+}
+
+/* ===============================
+   NEBULOSA
+================================ */
+body[data-chat-bg="nebula"] #messages-container, body[data-chat-bg="nebula"] #preview-background {
+    background: radial-gradient(circle at top, #1e293b, #020617);
+}
+
+/* ===============================
+   VIDRO / GLASS
+================================ */
+body[data-chat-bg="glass"] #messages-container, body[data-chat-bg="glass"] #preview-background {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* ===============================
+   GRID MINIMAL
+================================ */
+body[data-chat-bg="grid"] #messages-container, body[data-chat-bg="grid"] #preview-background {
+    background-color: #0f172a;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+/* ===============================
+   GRADIENTE MODERNO
+================================ */
+body[data-chat-bg="gradient"] #messages-container, body[data-chat-bg="gradient"] #preview-background {
+    background: linear-gradient(135deg, #1e3a8a, #312e81, #581c87);
+}
+
+/* ===============================
+   FUNDO ESCURO SIMPLES
+================================ */
+body[data-chat-bg="dark"] #messages-container {
+    background-color: #0f172a;
+}
+
+/* ===============================
+   FUNDO CLARO SIMPLES
+================================ */
+body[data-chat-bg="light"] #messages-container {
+    background-color: #f3f4f6;
+}
+
+/* ===============================
+   TRANSIÇÃO SUAVE ENTRE FUNDOS
+================================ */
+body[data-chat-bg] #messages-container {
+    transition:
+        background-color 0.4s ease,
+        background-image 0.4s ease;
+}
+/* Menu visível apenas para preview */
+.preview-menu {
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 6px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Ajuste visual */
+.preview-menu .options-item {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    pointer-events: none; /* visual apenas */
+    opacity: 0.9;
+}
+
+/* Background: Cartoon / Desenho Animado */
+body[data-chat-bg="cartoon"] #messages-container, body[data-chat-bg="cartoon"] #preview-background {
+    background:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.35) 0 12px, transparent 13px),
+        radial-gradient(circle at 70% 20%, rgba(255,255,255,0.25) 0 10px, transparent 11px),
+        radial-gradient(circle at 40% 70%, rgba(255,255,255,0.3) 0 14px, transparent 15px),
+        radial-gradient(circle at 80% 75%, rgba(255,255,255,0.25) 0 9px, transparent 10px),
+        radial-gradient(circle at 10% 80%, rgba(255,255,255,0.2) 0 11px, transparent 12px),
+        linear-gradient(135deg, #fde047, #facc15);
+    
+    background-size: 
+        220px 220px,
+        260px 260px,
+        240px 240px,
+        280px 280px,
+        300px 300px,
+        cover;
+
+    background-attachment: fixed;
+    animation: cartoonBubbles 25s ease-in-out infinite alternate;
+}
+
+/* movimento suave das bolinhas */
+@keyframes cartoonBubbles {
+    0% {
+        filter: drop-shadow(0 0 0 rgba(0,0,0,0.15));
+    }
+    100% {
+        filter: drop-shadow(0 6px 8px rgba(0,0,0,0.2));
+    }
 }

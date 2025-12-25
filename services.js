@@ -66,49 +66,70 @@ export async function traduzir(texto, targetLang) {
 
     const idioma = LANG_MAP[targetLang] || targetLang;
 
-    const prompt = `
-        Aja como um linguista profissional.
+    // Prompt ajustado para verificar ERROS NO ORIGINAL antes de traduzir
+   const prompt = `
+    Aja como um linguista profissional.
 
-        Analise o texto abaixo:
+    Texto recebido:
+    "${texto}"
 
-        "${texto}"
+    TAREFAS (SIGA EXATAMENTE):
 
-        Retorne APENAS um JSON neste formato exato:
+    1. Detecte o idioma real do texto.
 
-        {
-            "ja_esta_no_idioma": boolean,
-            "traducao": "string ou null",
-            "tem_erros": boolean,
-            "texto_corrigido": "string ou null",
-            "explicacao": "string ou null"
-        }
+    2. Verifique se há erros gramaticais ou ortográficos NO IDIOMA ORIGINAL do texto.
+    - Isso deve ser feito independentemente do idioma de destino.
+    - Se houver erro, marque "tem_erros": true.
 
-        REGRAS:
-        - Se o texto NÃO estiver em ${idioma}:
-        - "traducao" deve conter a tradução para ${idioma}
-        - os demais campos podem ser null
-        - Se o texto JÁ estiver em ${idioma}:
-        - NÃO traduza
-        - Verifique erros de digitação, gramática ou clareza
-        - Explique as correções de forma simples
-        - Nunca inclua texto fora do JSON.        
+    3. Se houver erros:
+    - forneça "texto_corrigido"
+    - forneça "explicacao"
+    - NÃO traduza o texto
+
+    4. Se NÃO houver erros:
+    - traduza o texto para ${idioma}
+
+    RETORNE APENAS JSON neste formato:
+
+    {
+    "idioma_detectado": "string",
+    "tem_erros": boolean,
+    "traducao": "string ou null",
+    "texto_corrigido": "string ou null",
+    "explicacao": "string ou null"
+    }
+
+    REGRAS IMPORTANTES:
+    - O idioma do texto pode ser diferente do idioma de destino.
+    - Erro é apenas problema gramatical ou ortográfico.
+    - Nunca escreva texto fora do JSON.
+    - Ignore qualquer falta de pontuação, apenas erros gramaticais ou ortográficos e acetos em palavras
     `;
+
+
 
     try {
         const res = await aiRequest(prompt, false);
         const data = extractJSON(res);
         console.log("Resposta tradução/revisão:", data);
-        let resultado;
+        
+       let resultado;
 
-        if (!data.ja_esta_no_idioma) {
-            resultado = data.traducao || texto;
-        } else if (data.tem_erros) {
-            resultado =
-                `✏️ Revisão detectada:\n\n` +
-                `Forma sugerida:\n${data.texto_corrigido}\n\n` +
-                `Explicação:\n${data.explicacao}`;
+        if (data.tem_erros) {
+            resultado = {
+                texto: `Correção sugerida: ${data.texto_corrigido}\n\n(${data.explicacao})`,
+                temErro: true
+            };
+        } else if (data.traducao) {
+            resultado = {
+                texto: data.traducao,
+                temErro: false
+            };
         } else {
-           resultado = data.traducao || texto;
+            resultado = {
+                texto,
+                temErro: false
+            };
         }
 
         translationCache[cacheKey] = resultado;
@@ -116,7 +137,7 @@ export async function traduzir(texto, targetLang) {
 
     } catch (e) {
         console.error("Erro na tradução/revisão:", e);
-        return texto;
+        return { texto: texto, temErro: false };
     }
 }
 
@@ -173,4 +194,12 @@ Texto:
         console.error("Erro ao detectar idioma", e);
         return null;
     }
+}
+
+export function limparCacheTraducao(texto) {
+    Object.keys(translationCache).forEach(key => {
+        if (key.startsWith(`${texto}_`)) {
+            delete translationCache[key];
+        }
+    });
 }

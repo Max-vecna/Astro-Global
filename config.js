@@ -3,13 +3,13 @@ import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 
 // Configurações e Constantes
 export const firebaseConfig = {
-    apiKey: "AIzaSyAxb2s4tzbtD1arG9UAf7UrzhFqbRrrsl8",
-    authDomain: "astro-642b6.firebaseapp.com",
-    databaseURL: "https://astro-642b6-default-rtdb.firebaseio.com",
-    projectId: "astro-642b6",
-    storageBucket: "astro-642b6.appspot.com",
-    messagingSenderId: "141832763492",
-    appId: "1:141832763492:web:c8f6a529849bab54ee8771"
+  apiKey: "AIzaSyC0eXt2QukMgcAJRzgflenD46JvRBfmczg",
+  authDomain: "astro-chat-7d044.firebaseapp.com",
+  projectId: "astro-chat-7d044",
+  storageBucket: "astro-chat-7d044.firebasestorage.app",
+  messagingSenderId: "64273019284",
+  appId: "1:64273019284:web:c4a9ade561d5270b9edf81",
+  measurementId: "G-HTNLE1C4P4"
 };
 
 // Inicialização
