@@ -102,7 +102,7 @@
         </div>
 
         <!-- Chat Screen -->
-        <div id="chat-screen" class="w-full h-full flex-col hidden bg-[var(--background-color)] md:max-w-4xl md:h-5/6 md:rounded-2xl md:shadow-2xl md:border md:border-white/5 relative">
+        <div id="chat-screen" style="background: #0f172ab8;" class="w-full h-full flex-col hidden bg-[var(--background-color)] md:max-w-4xl md:h-5/6 md:rounded-2xl md:shadow-2xl md:border md:border-white/5 relative">
             <header class="flex items-center justify-between p-3 glassmorphism md:rounded-t-2xl z-10 gap-2">
                 <div class="flex items-center gap-2">
                     <button id="leave-btn" class="p-2 rounded-full hover:bg-white/10 text-lg transition-colors text-[var(--text-color)]">
@@ -155,14 +155,14 @@
             <footer class="p-3 glassmorphism md:rounded-b-2xl z-20">                
                 <div id="reply-preview" class="hidden mb-2 p-2 rounded-lg bg-black/20 border-l-4 border-[var(--secondary-color)]"></div>
                 
-                <div class="flex items-end gap-2 w-full">
+                <div class="flex  gap-2 w-full">
                     <div class="flex-1 relative">
                         <textarea id="message-input" rows="1" placeholder="Digite uma mensagem..." class="w-full bg-[var(--surface-color)] text-[var(--text-color)] rounded-2xl py-3 px-4 outline-none focus:ring-2 focus:ring-[var(--primary-color)] border border-white/5 resize-none overflow-hidden max-h-32" style="min-height: 48px;"></textarea>
                     </div>
                     
                     <!-- Botões de Ação Agrupados e Alinhados -->
-                    <div class="flex items-center gap-1 shrink-0">
-                        <button id="grammar-check-btn" class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-transform active:scale-90 hover:bg-white/10 text-emerald-400" title="Corrigir Gramática">
+                    <div class="flex gap-1 shrink-0">
+                        <button id="grammar-check-btn" style=" background: #334155" class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-transform active:scale-90 hover:bg-white/10 text-emerald-400" title="Corrigir Gramática">
                             <i class="fas fa-check-double text-lg"></i>
                         </button>
 
@@ -211,6 +211,9 @@
                         <option value="matrix">💻 Matrix (Cyber Grid)</option>
                         <option value="aurora">🌌 Aurora</option>
                         <option value="grid">🟤 Minimal Grid</option>
+                        <option value="nebula">🌌 Nebula (Animado)</option>
+    <option value="ocean">🌊 Ocean Wave</option>
+    <option value="cybergrid">🧬 Cyber Grid</option>
 
                     </select>
                     <i class="fas fa-image absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
@@ -233,7 +236,10 @@
                         <option value="glass">🧊 Glass</option>
                         <option value="paper">📄 Paper</option>
                         <option value="terminal">💻 Terminal</option>
-
+                        <option value="rpg">⚔️ RPG Medieval</option>
+                        <option value="bubblegum">🍭 Bubble Gum</option>
+                        <option value="brutalist">🏁 Brutalista</option>
+                        <option value="hologram">💎 Holograma</option>
                     </select>
                     <i class="fas fa-paint-brush absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
                 </div>

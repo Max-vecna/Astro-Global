@@ -494,7 +494,7 @@ body[data-bg-style="matrix"] {
 
 .grammar-check-btn
 {
-    background: #334155;
+    background: #334155 !important;
 }
 
 .speak-btn {
@@ -506,4 +506,114 @@ body[data-bg-style="matrix"] {
 
 .speak-btn i {
     font-size: 0.8rem;
+}
+
+
+/* --- NOVOS ESTILOS DE BALÃO --- */
+
+/* 12. RPG / Medieval */
+body[data-bubble-style="rpg"] .chat-bubble {
+    background: #4a3728 !important;
+    border: 3px double #d4af37;
+    border-radius: 0 !important;
+    color: #f3e5ab;
+    box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
+    font-family: 'Georgia', serif;
+}
+body[data-bubble-style="rpg"] .items-end .chat-bubble { border-color: #ffd700; }
+body[data-bubble-style="rpg"] .original-text { border-top-color: #d4af37; color: #d4af37; }
+
+/* 13. Bubble Gum (Fofinho) */
+body[data-bubble-style="bubblegum"] .chat-bubble {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%) !important;
+    color: #742a2a;
+    border-radius: 25px !important;
+    border: 3px solid #fff;
+    box-shadow: 0 8px 15px rgba(255, 154, 158, 0.4);
+}
+body[data-bubble-style="bubblegum"] .items-end .chat-bubble {
+    background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%) !important;
+    color: #1e3a8a;
+}
+
+/* 14. Brutalista (High Contrast) */
+body[data-bubble-style="brutalist"] .chat-bubble {
+    background: #fff !important;
+    color: #000;
+    border: 4px solid #000;
+    border-radius: 0 !important;
+    box-shadow: 8px 8px 0px #000;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+body[data-bubble-style="brutalist"] .items-end .chat-bubble {
+    background: #f0f !important; /* Magenta */
+}
+
+/* 15. Holográfico (Futurista) */
+body[data-bubble-style="hologram"] .chat-bubble {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.8);
+    overflow: hidden;
+}
+body[data-bubble-style="hologram"] .chat-bubble::before {
+    content: "";
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: rotate(45deg);
+    animation: holoScan 3s infinite linear;
+}
+@keyframes holoScan {
+    from { transform: translateY(-20%) rotate(45deg); }
+    to { transform: translateY(20%) rotate(45deg); }
+}
+
+/* --- NOVOS FUNDOS --- */
+
+/* Background: Nebula (Animado Suave) */
+body[data-bg-style="nebula"] {
+    background: radial-gradient(circle at 50% 50%, #2d0054 0%, #000000 100%);
+}
+body[data-bg-style="nebula"]::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: url('https://www.transparenttextures.com/patterns/stardust.png');
+    opacity: 0.3;
+    animation: nebulaPulse 10s ease-in-out infinite alternate;
+    z-index: -1;
+}
+@keyframes nebulaPulse {
+    from { transform: scale(1); opacity: 0.2; }
+    to { transform: scale(1.2); opacity: 0.5; }
+}
+
+/* Background: Ocean Wave (Gradiente Animado) */
+body[data-bg-style="ocean"] {
+    background: linear-gradient(-45deg, #0f172a, #1e3a8a, #0ea5e9, #2dd4bf);
+    background-size: 400% 400%;
+    animation: oceanMove 15s ease infinite;
+}
+@keyframes oceanMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Background: Cyber Grid Moving */
+body[data-bg-style="cybergrid"] {
+    background-color: #050505;
+    background-image: 
+        linear-gradient(0deg, transparent 24%, rgba(0, 255, 255, .05) 25%, rgba(0, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, .05) 75%, rgba(0, 255, 255, .05) 76%, transparent 77%, transparent),
+        linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, .05) 25%, rgba(0, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, .05) 75%, rgba(0, 255, 255, .05) 76%, transparent 77%, transparent);
+    background-size: 50px 50px;
+    animation: gridScroll 20s linear infinite;
+}
+@keyframes gridScroll {
+    from { background-position: 0 0; }
+    to { background-position: 0 500px; }
 }
