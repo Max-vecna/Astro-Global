@@ -32,16 +32,39 @@ const updatePresenceUI = (users) => {
     });
 };
 
+export const createRoom = async (roomCode, roomName) => {
+    const roomRef = ref(db, `rooms/${roomCode}`);
+
+    await set(roomRef, {
+        name: roomName,
+        createdAt: Date.now()
+    });
+
+    await joinRoom(roomCode);
+};
+
 // --- Salas ---
-export const joinRoom = async (roomCode) => {
+export const joinRoom = async (roomCode, name) => {
     await cleanupRoomListeners();
     if (!roomCode) return;
     
     state.currentRoom = roomCode;
+
+    const roomSnap = await get(ref(db, `rooms/${roomCode}`));
+    const roomData = roomSnap.exists() ? roomSnap.val() : null;
+
+    if (roomData?.name) {
+        DOMElements.roomNameDisplay.textContent = roomData.name;
+    } else {
+        DOMElements.roomNameDisplay.textContent = `#${roomCode}`;
+    }
+
+
     updateRecentRooms(roomCode);
     Utils.switchScreen('chat');
     
     DOMElements.roomCodeDisplay.textContent = roomCode;
+    
     DOMElements.messagesList.innerHTML = '';
     DOMElements.messagesList.appendChild(DOMElements.typingIndicatorContainer);
     
@@ -119,11 +142,25 @@ export const renderRoomList = () => {
         return;
     }
     
-    allRooms.forEach(roomCode => {
+    allRooms.forEach(async roomCode => {
         const el = document.createElement('div');
-        el.className = "flex items-center p-4 bg-[var(--surface-color)] rounded-xl cursor-pointer hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 mb-2";
-        el.innerHTML = `<div class="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-indigo-500 text-white shadow-md mr-3"><i class="fas fa-hashtag"></i></div><div class="flex-1"><h3 class="font-bold text-[var(--text-color)]">#${roomCode}</h3><p class="text-xs text-muted-color">Clique para entrar</p></div><button class="del-room w-8 h-8 rounded-full hover:text-red-500"><i class="fas fa-trash"></i></button>`;
+        const roomSnap = await get(ref(db, `rooms/${roomCode}`));
+        const roomName = roomSnap.exists() ? roomSnap.val().name : null;
+
+        el.className = "group flex items-center p-4 bg-white/5 rounded-2xl cursor-pointer hover:bg-white/10 transition-all border border-white/5 hover:border-blue-500/30 mb-3 animate-in fade-in slide-in-from-bottom-2";
         
+        el.innerHTML = `
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg mr-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-rocket text-lg"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 class="font-bold text-white truncate text-base">${roomName || "Sala sem nome"}</h3>
+                <p class="text-[10px] text-slate-500 font-mono mt-0.5 tracking-wider">#${roomCode}</p>
+            </div>
+            <button class="del-room w-10 h-10 rounded-full flex items-center justify-center text-slate-600 hover:text-red-500 hover:bg-red-500/10 transition-all">
+                <i class="fas fa-trash-can text-sm"></i>
+            </button>
+        `;
         el.onclick = (e) => { 
             if (e.target.closest('.del-room')) { 
                 e.stopPropagation(); 

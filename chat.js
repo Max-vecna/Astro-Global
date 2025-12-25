@@ -30,9 +30,13 @@ export const sendMessage = async () => {
     }
  
     await push(ref(db, `messages/${state.currentRoom}`), payload);
- 
+
+    // 🔥 LIMPA O "digitando..." imediatamente
+    await set(ref(db, `typing/${state.currentRoom}/${state.userId}`), null);
+
     DOMElements.messageInput.value = '';
     clearReply();
+
 };
 
 export const startReply = (msgId, text) => {

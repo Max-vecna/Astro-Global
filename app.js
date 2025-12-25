@@ -135,12 +135,18 @@ document.body.addEventListener('click', () => { if(!state.audioUnlocked) Utils.u
 DOMElements.newConversationBtn.onclick = () => { DOMElements.roomActionsModal.classList.remove('hidden'); DOMElements.roomActionsModal.classList.add('flex'); };
 DOMElements.closeRoomActionsModalBtn.onclick = () => { DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); };
 
-DOMElements.modalCreateRoomBtn.onclick = () => { 
-    const code = Math.random().toString(36).substring(2, 7).toUpperCase(); 
-    Room.joinRoom(code); 
-    DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); 
-    navigator.clipboard.writeText(code); 
+DOMElements.modalCreateRoomBtn.onclick = async () => {
+    const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const name = DOMElements.modalRoomNameInput.value.trim() || "Nova Sala";
+
+    await Room.createRoom(code, name);
+
+    DOMElements.roomActionsModal.classList.add('hidden');
+    DOMElements.roomActionsModal.classList.remove('flex');
+
+    navigator.clipboard.writeText(code);
 };
+
 
 DOMElements.modalConfirmJoinBtn.onclick = () => { 
     const code = DOMElements.modalRoomCodeInput.value.trim().toUpperCase(); 

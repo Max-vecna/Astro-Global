@@ -30,14 +30,17 @@
         setAppHeight();
     </script>
 
-    <!-- Splash Screen -->
-    <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 transition-opacity duration-500">
-        <div class="flex items-center text-5xl font-bold text-slate-200 z-10">
-            <i class="fas fa-globe-americas mr-3 text-indigo-500 animate-pulse"></i>
-            <span>Astro</span>
+     <!-- Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="relative w-32 h-32 mb-8">
+            <div class="absolute inset-0 border-4 border-blue-500/20 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-blue-500 rounded-full animate-spin border-t-transparent"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <i class="fas fa-rocket text-4xl text-blue-500"></i>
+            </div>
         </div>
-        <div class="splash-loader w-12 h-12 border-4 border-slate-700 rounded-full mt-12 z-10"></div>
-        <p class="absolute bottom-10 text-slate-500 text-center px-4 z-10">Conectando mundos e idiomas.</p>
+        <h1 class="text-2xl font-bold text-white tracking-widest font-pixel">ASTRO CHAT</h1>
+        <p class="text-blue-400 mt-2 text-sm">Carregando universos...</p>
     </div>
 
     <!-- App Container -->
@@ -110,10 +113,21 @@
                     </button>
                     <div>
                         <div class="relative group cursor-pointer flex flex-col" id="room-code-wrapper">
-                            <h2 class="font-bold text-lg text-[var(--text-color)] leading-tight flex items-center gap-2">
-                                #<span class="room-code-value tracking-wider"></span>
-                            </h2>
-                            <p id="user-count-display" class="text-xs text-green-400 font-medium"></p>
+                           <div class="flex items-center gap-3">
+                                <div id="room-icon"
+                                    class="w-10 h-10 rounded-xl flex items-center justify-center 
+                                            bg-gradient-to-br from-blue-500 to-indigo-600 
+                                            text-white shadow-lg transition-transform">
+                                    <i class="fas fa-rocket text-lg"></i>
+                                </div>
+
+                                <div class="flex flex-col leading-tight">
+                                    <span class="room-name-display font-bold text-lg"></span>
+                                    <span class="text-xs opacity-60 font-mono flex">
+                                        #<span class="room-code-value"></span> <p id="user-count-display" class="text-xs text-green-400 font-medium ml-2"></p>
+                                    </span>
+                                </div>
+                            </div>                            
                         </div>
                     </div>
                 </div>
@@ -404,16 +418,30 @@
                  <h3 class="text-xl font-bold">Nova Conversa</h3>
                  <button id="close-room-actions-modal-btn" class="text-2xl text-muted-color hover:text-text-color">&times;</button>
             </div>
-            <button id="modal-create-room-btn" class="w-full bg-[var(--primary-color)] text-white hover:opacity-90 font-bold p-4 rounded-xl transition-all flex items-center justify-center gap-3 text-lg shadow-lg">
-                <i class="fas fa-plus-circle"></i> Criar Sala Privada
-            </button>
-            <div class="relative flex py-2 items-center"><div class="flex-grow border-t border-white/10"></div><span class="flex-shrink mx-4 text-muted-color text-sm">OU</span><div class="flex-grow border-t border-white/10"></div></div>
-            <div>
-                 <label class="text-sm font-medium text-muted-color mb-2 block">Código da Sala</label>
-                 <div class="flex gap-2">
-                    <input type="text" id="modal-room-code-input" placeholder="CÓDIGO" class="flex-1 p-3 bg-[var(--surface-color)] border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-color)] text-center uppercase tracking-widest font-bold text-white">
-                    <button id="modal-confirm-join-btn" class="bg-emerald-600 hover:bg-emerald-700 p-3 rounded-xl font-bold aspect-square flex items-center justify-center transition-colors text-white"><i class="fas fa-arrow-right"></i></button>
-                 </div>
+           <div class="p-6 space-y-6">
+                <!-- Seção Criar -->
+                <div class="space-y-3">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Criar Nova Sala</label>
+                    <input type="text" id="modal-room-name-input" placeholder="Nome da sala (ex: Família, Estudo...)" class="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <button id="modal-create-room-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2">
+                        <i class="fas fa-plus"></i> Gerar Sala Privada
+                    </button>
+                </div>
+
+                <div class="relative flex items-center py-2">
+                    <div class="flex-grow border-t border-white/5"></div>
+                    <span class="flex-shrink mx-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ou Entrar</span>
+                    <div class="flex-grow border-t border-white/5"></div>
+                </div>
+
+                <!-- Seção Entrar -->
+                <div class="space-y-3">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Código de Acesso</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="modal-room-code-input" placeholder="CÓDIGO" class="flex-1 p-3 bg-white/5 border border-white/10 rounded-xl text-center uppercase font-mono font-bold text-white tracking-widest outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button id="modal-confirm-join-btn" class="w-12 h-12 bg-emerald-600 hover:bg-emerald-500 rounded-xl flex items-center justify-center text-white"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
