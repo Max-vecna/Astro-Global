@@ -15,7 +15,7 @@ let replyingToMessage = null;
 let activeMessageMenu = null;
 let loadTime = Date.now();
 let currentTranslationLang = localStorage.getItem('astroUserLang') || "pt"; 
-let currentTranslationLangGlobal = localStorage.getItem('astroUserLangGlobal') || "pt"; 
+let currentTranslationLangGlobal = localStorage.getItem('astroUserLangGlobal'); 
 const userColors = {};
 let onlineUsersInRoom = {};
 
