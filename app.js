@@ -15,6 +15,7 @@ let replyingToMessage = null;
 let activeMessageMenu = null;
 let loadTime = Date.now();
 let currentTranslationLang = localStorage.getItem('astroUserLang') || "pt"; 
+let currentTranslationLangGlobal = localStorage.getItem('astroUserLangGlobal') || "pt"; 
 const userColors = {};
 let onlineUsersInRoom = {};
 
@@ -419,23 +420,55 @@ const renderMessage = (msgData, msgId) => {
 };
 
 // --- Actions & Modals ---
+const detectedLangCache = {};
 
-function speakTranslatedMessage(msgId) {
+/**
+ * Executa a síntese de voz baseada no idioma detetado do texto.
+ * @param {string} msgId - O ID do elemento que contém o texto.
+ */
+
+function setSpeakLoading(msgId) {
+    const btn = document.querySelector(
+        `.speak-btn[data-msg-id="${msgId}"] i`
+    );
+    if (!btn) return;
+
+    btn.className = 'fas fa-circle-notch fa-spin';
+}
+
+function setSpeakIdle(msgId) {
+    const btn = document.querySelector(
+        `.speak-btn[data-msg-id="${msgId}"] i`
+    );
+    if (!btn) return;
+
+    btn.className = 'fas fa-volume-high';
+}
+
+async function speakTranslatedMessage(msgId) {
     const transEl = document.getElementById(`trans-${msgId}`);
     if (!transEl) return;
 
-    // ⚠️ Extrai SOMENTE texto real
     const text = transEl.textContent.replace(/\s+/g, ' ').trim();
+    if (!text || text.length < 2) return;
 
-    if (!text || text.length < 2) {
-        console.warn('Nada para falar');
-        return;
-    }
+    // 🔄 Ícone de carregamento
+    setSpeakLoading(msgId);
 
     // Cancela qualquer fala anterior
-    window.speechSynthesis.cancel();
+    speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    let detectedLang = null;
+
+    try {
+        const detectionResult = await Services.detectarIdioma(text);
+        detectedLang =
+            typeof detectionResult === 'string'
+                ? detectionResult
+                : detectionResult?.lang;
+    } catch (err) {
+        console.warn('Falha ao detectar idioma:', err);
+    }
 
     const langMap = {
         pt: 'pt-BR',
@@ -444,32 +477,57 @@ function speakTranslatedMessage(msgId) {
         fr: 'fr-FR',
         de: 'de-DE',
         it: 'it-IT',
+        ru: 'ru-RU',
         ja: 'ja-JP',
         zh: 'zh-CN',
-        ru: 'ru-RU',
-        ar: 'ar-SA'
+        ko: 'ko-KR'
     };
 
-    const targetLang = langMap[currentTranslationLang] || 'en-US';
+    const targetLang = langMap[detectedLang] || detectedLang || 'en-US';
+
+    const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = targetLang;
-    utterance.rate = 1;
+    utterance.rate = 0.8;
     utterance.pitch = 1;
+    utterance.volume = 1;
 
-    // 🔊 GARANTIR que existe uma voz compatível
-    const voices = speechSynthesis.getVoices();
+    const getBestVoice = () => {
+        const voices = speechSynthesis.getVoices();
+        return (
+            voices.find(v =>
+                v.lang === targetLang &&
+                /natural|google|microsoft|premium/i.test(v.name)
+            ) ||
+            voices.find(v => v.lang === targetLang) ||
+            voices.find(v => v.lang.startsWith(targetLang.split('-')[0])) ||
+            null
+        );
+    };
 
-    const voice =
-        voices.find(v => v.lang === targetLang) ||
-        voices.find(v => v.lang.startsWith(targetLang.split('-')[0])) ||
-        voices.find(v => v.lang.startsWith('en'));
+    utterance.onstart = () => {
+        // 🔊 Começou a falar → ícone normal
+        setSpeakIdle(msgId);
+    };
 
-    if (voice) {
-        utterance.voice = voice;
+    utterance.onend = () => {
+        setSpeakIdle(msgId);
+    };
+
+    utterance.onerror = () => {
+        setSpeakIdle(msgId);
+    };
+
+    const speak = () => {
+        const voice = getBestVoice();
+        if (voice) utterance.voice = voice;
+        speechSynthesis.speak(utterance);
+    };
+
+    if (speechSynthesis.getVoices().length === 0) {
+        speechSynthesis.onvoiceschanged = speak;
     } else {
-        console.warn('Nenhuma voz compatível encontrada');
+        speak();
     }
-
-    speechSynthesis.speak(utterance);
 }
 
 
@@ -607,8 +665,8 @@ async function selectToken(el, token, contextPhrase) {
     document.getElementById('study-loading').classList.remove('hidden');
     document.getElementById('study-result-area').classList.add('hidden');
     try {
-        const data = await Services.explorarPalavra(token, contextPhrase, currentTranslationLang);
-        document.getElementById('word-translation').textContent = data.traducao_contextual;
+        const data = await Services.explorarPalavra(token, contextPhrase, currentTranslationLangGlobal);
+        document.getElementById('word-translation').textContent = data.traducao;
         const speakContainer = document.getElementById('word-speak-container');
         speakContainer.innerHTML = ''; 
         const btn = document.createElement('button');
@@ -797,6 +855,7 @@ document.getElementById('save-nickname-btn').onclick = async () => {
         await updateNicknameHistory(val);
         localStorage.setItem('astroNickname', val);
         localStorage.setItem('astroUserLang', langVal);
+        localStorage.setItem('astroUserLangGlobal', langVal);
         location.reload(); 
     }
 };

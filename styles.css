@@ -149,6 +149,70 @@ body[data-bubble-style="pixel"] .items-start .chat-bubble {
     background-color: #f87171; color: white; border-color: white;
 }
 
+
+/* 9. Glass / Frosted */
+body[data-bubble-style="glass"] .chat-bubble {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    border-radius: 18px;
+}
+body[data-bubble-style="glass"] .items-end .chat-bubble {
+    background: rgba(99,102,241,0.35);
+}
+body[data-bubble-style="glass"] .items-start .chat-bubble {
+    background: rgba(30,41,59,0.55);
+}
+
+/* 10. Paper / Clean */
+body[data-bubble-style="paper"] .chat-bubble {
+    background: #f8fafc;
+    color: #0f172a;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+body[data-bubble-style="paper"] .items-end .chat-bubble {
+    background: #c4c4c4;
+}
+
+/* 11. Terminal / Hacker */
+body[data-bubble-style="terminal"] .chat-bubble {
+    font-family: monospace;
+    background: #020617;
+    color: #22c55e;
+    border: 1px solid #22c55e;
+    border-radius: 6px;
+    box-shadow: 0 0 8px rgba(34,197,94,0.4);
+}
+body[data-bubble-style="terminal"] .items-start .chat-bubble {
+    color: #38bdf8;
+    border-color: #38bdf8;
+}
+
+/* Background: Aurora */
+body[data-bg-style="aurora"] {
+    background: linear-gradient(120deg, #1e3a8a, #6d28d9, #db2777);
+    background-size: 400% 400%;
+    animation: auroraMove 18s ease infinite;
+}
+
+@keyframes auroraMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+/* Background: Minimal Grid */
+body[data-bg-style="grid"] {
+    background-color: #0f172a;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
 .message-meta {
     font-size: 0.65rem;
     opacity: 0.6;
