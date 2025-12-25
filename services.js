@@ -146,7 +146,31 @@ export async function segmentarTexto(texto) {
 
 export async function explorarPalavra(palavra, frase, userLang) {
     const idiomaUsuario = LANG_MAP[userLang] || "português";
-    const prompt = `Analise a palavra "${palavra}" no contexto "${frase}". Retorne JSON: { "traducao_contextual": "...", "explicacao": "...", "classe_gramatical": "...", "exemplo_uso": "...", "idioma_origem_iso": "..." } (Responda em ${idiomaUsuario})`;
+    const prompt = `Analise a palavra "${palavra}" no contexto "${frase}". Retorne JSON: { "traducao": "tradução mais proxima da palavra para ${idiomaUsuario}", "explicacao": "...", "classe_gramatical": "...", "exemplo_uso": "...", "idioma_origem_iso": "..." } (Responda em ${idiomaUsuario})`;
     const res = await aiRequest(prompt);
     return extractJSON(res);
+}
+
+export async function detectarIdioma(texto) {
+    const prompt = `
+Detecte o idioma do texto abaixo.
+Retorne APENAS um JSON válido no formato:
+
+{
+  "lang": "pt",
+  "iso": "pt-BR",
+  "nome": "Português"
+}
+
+Texto:
+"${texto}"
+    `.trim();
+
+    try {
+        const res = await aiRequest(prompt, false);
+        return extractJSON(res);
+    } catch (e) {
+        console.error("Erro ao detectar idioma", e);
+        return null;
+    }
 }
