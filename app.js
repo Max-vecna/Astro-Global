@@ -60,7 +60,8 @@ DOMElements.messageInput.addEventListener('input', function() {
         set(typingRef, { nickname: state.nickname, text: this.value.substring(0, 60) });
         if (state.typingTimeout) clearTimeout(state.typingTimeout);
         state.typingTimeout = setTimeout(() => set(typingRef, null), 3000);
-    } else { set(typingRef, null); }
+    } else { set(typingRef, null); 
+        }
 });
 
 DOMElements.messageInput.onkeydown = (e) => { 

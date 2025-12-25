@@ -1,0 +1,37 @@
+  /* 1. Astro */
+        body[data-bubble-style="astro"] .chat-bubble { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(4px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px; }
+        body[data-bubble-style="astro"] .self .chat-bubble { border-color: #818cf8; background: rgba(99, 102, 241, 0.2); }
+
+        /* 2. Neon */
+        body[data-bubble-style="neon"] .chat-bubble { background: #000; border: 2px solid #0ff; box-shadow: 0 0 8px #0ff; color: #0ff; border-radius: 4px; }
+        body[data-bubble-style="neon"] .self .chat-bubble { border-color: #f0f; box-shadow: 0 0 8px #f0f; color: #f0f; }
+
+        /* 3. Brutalista */
+        body[data-bubble-style="brutalist"] .chat-bubble { background: #fff; color: #000; border: 3px solid #000; border-radius: 0; box-shadow: 4px 4px 0px #000; font-weight: 800; text-transform: uppercase; }
+        body[data-bubble-style="brutalist"] .self .chat-bubble { background: #fbbf24; }
+
+        /* 4. Pixel */
+        body[data-bubble-style="pixel"] .chat-bubble { font-family: 'Press+Start+2P', cursive; font-size: 8px; background: #22c55e; border: 3px solid #14532d; border-radius: 0; }
+        body[data-bubble-style="pixel"] .self .chat-bubble { background: #3b82f6; border-color: #1d4ed8; }
+
+        /* 5. Holograma */
+        body[data-bubble-style="hologram"] .chat-bubble { background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(168,85,247,0.2)); border-left: 4px solid #06b6d4; clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 95% 100%, 0% 100%); }
+
+        /* 6. Papel */
+        body[data-bubble-style="paper"] .chat-bubble { background: #fef3c7; color: #92400e; border-radius: 2% 6% 5% 4% / 1% 1% 2% 4%; box-shadow: 2px 3px 10px rgba(0,0,0,0.1); transform: rotate(-1deg); }
+
+        /* 7. Claymorphism */
+        body[data-bubble-style="clay"] .chat-bubble { 
+            background: #6366f1 !important; 
+            border-radius: 25px !important; 
+            box-shadow: inset 5px 5px 10px rgba(255,255,255,0.2), 8px 8px 15px rgba(0,0,0,0.2); 
+        }
+
+        /* 8. Minimalista */
+        body[data-bubble-style="line"] .chat-bubble { background: transparent; border-bottom: 2px solid rgba(255,255,255,0.3); border-radius: 0; }
+
+        /* 9. Bubble Gum */
+        body[data-bubble-style="gum"] .chat-bubble { background: #f472b6; border-radius: 25px; border: 3px solid #f9a8d4; }
+
+        /* 10. Cyberpunk */
+        body[data-bubble-style="cyber"] .chat-bubble { background: #111; color: #fde047; border-right: 5px solid #fde047; clip-path: polygon(5% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 20%); }

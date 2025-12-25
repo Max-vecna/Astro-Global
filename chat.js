@@ -87,7 +87,7 @@ export const renderTypingIndicator = (typingUsers) => {
     Object.entries(typingUsers).forEach(([typingUserId, userData]) => {
         if (!userData || !userData.nickname) return;
         const wrapper = document.createElement('div');
-        wrapper.className = 'flex flex-col items-start mb-2 ml-1 animate-pulse max-w-[80%]';
+        wrapper.className = 'flex flex-col items-start mb-2 animate-pulse max-w-[80%]';
         wrapper.innerHTML = `<div class="text-xs text-muted-color mb-1 ml-2">${userData.nickname} digitando...</div><div class="chat-bubble bg-[var(--bubble-other-bg)] text-[var(--bubble-other-text)] rounded-2xl py-2 px-4 opacity-70 italic text-sm border border-white/10">${userData.text || '...'}</div>`;
         container.appendChild(wrapper);
     });
@@ -109,7 +109,7 @@ export const renderMessage = (msgData, msgId) => {
     const isSameUserAsPrevious = state.lastRenderedUserId === msgData.userId;
 
     const messageWrapper = document.createElement('div');
-    messageWrapper.className = `message-wrapper items-${isSelf ? 'end' : 'start'}`;
+    messageWrapper.className = `message-wrapper items-${isSelf ? 'end' : 'start'} bublle`;
     messageWrapper.dataset.msgId = msgId;
     messageWrapper.dataset.userId = msgData.userId;
     
@@ -162,7 +162,7 @@ export const renderMessage = (msgData, msgId) => {
    contentHTML += `
     <div class="flex items-start gap-2">
         <div id="${translationId}" class="translated-text flex-1">
-            ${currentTrans || '<i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i>'}
+            ${currentTrans ? currentTrans.trim().trimStart() : ''}
         </div>
         <button class="speak-btn text-xs opacity-60 hover:opacity-100 transition" title="Ouvir tradução" data-msg-id="${msgId}">
             <i class="fas fa-volume-high"></i>
@@ -175,7 +175,7 @@ export const renderMessage = (msgData, msgId) => {
 
     const meta = document.createElement('div');
     meta.className = `message-meta ${isSelf ? 'meta-self' : 'meta-other'}`;
-    meta.innerHTML = `<span class="message-time">${time}</span>${isSelf ? '<i class="fas fa-check ml-1"></i>' : ''}`;
+    meta.innerHTML = `<span class="message-time">${time}</span>`;
 
     bubble.innerHTML = contentHTML;
     
@@ -199,15 +199,55 @@ export const renderMessage = (msgData, msgId) => {
         openActionsMenu(bubble, msgId, msgData.text);
     });
 
+    const existingTranslation =
+    existingMsgEl?.querySelector('.translated-text')?.textContent?.trim();
+
+    if (existingTranslation) {
+        const btn = bubble.querySelector('.speak-btn');
+        if (btn) btn.classList.add('ready');
+    }
+
+
     if (existingMsgEl) {
         DOMElements.messagesList.replaceChild(messageWrapper, existingMsgEl);
-        if (textChanged || currentTrans.includes('fa-spin') || !currentTrans) {
+        if (textChanged) {
             performTranslation(msgId, msgData.text, state.currentTranslationLang);
         }
+
     } else {
         DOMElements.messagesList.insertBefore(messageWrapper, DOMElements.typingIndicatorContainer);
         Utils.scrollToBottom();
         performTranslation(msgId, msgData.text, state.currentTranslationLang);
+    }
+
+    // === REAÇÕES ===
+    if (msgData.reactions) {
+        const reactionsBar = document.createElement("div");
+        reactionsBar.className = "reaction-bar";
+
+        Object.entries(msgData.reactions).forEach(([emoji, users]) => {
+            const count = Object.keys(users || {}).length;
+            if (count === 0) return;
+
+            const btn = document.createElement("button");
+            btn.className = "reaction-pill";
+            btn.textContent = `${emoji} ${count}`;
+
+            if (users[state.userId]) {
+                btn.classList.add("active");
+                messageWrapper.dataset[`react_${emoji}`] = "true";
+            }
+
+            btn.addEventListener("mousedown", e => e.stopPropagation());
+            btn.addEventListener("click", e => {
+                e.stopPropagation();
+                toggleReaction(msgId, emoji);
+            });
+
+            reactionsBar.appendChild(btn);
+        });
+
+         meta.appendChild(reactionsBar);
     }
 
     state.lastRenderedUserId = msgData.userId;
@@ -222,7 +262,11 @@ export const performTranslation = async (msgId, originalText, lang) => {
     const speakBtn = wrapper?.querySelector('.speak-btn');
 
     // esconder botão enquanto carrega
-    if (speakBtn) speakBtn.classList.remove('ready');
+    // só esconder se realmente vai traduzir novamente
+    if (speakBtn && el.textContent.trim() === '') {
+        speakBtn.classList.remove('ready');
+    }
+
 
     // loading
     el.classList.add('loading');
@@ -336,6 +380,57 @@ async function speakTranslatedMessage(msgId) {
     speechSynthesis.speak(utterance);
 }
 
+function openReactionPicker(msgId) {
+    const emojis = ['👍','😂','🔥','❤️','😮','😢','👏'];
+
+    const menu = document.createElement('div');
+    menu.className = 'reaction-picker';
+
+    emojis.forEach(e => {
+        const btn = document.createElement('button');
+        btn.textContent = e;
+        btn.onclick = () => {
+            toggleReaction(msgId, e);
+            menu.remove();
+        };
+        menu.appendChild(btn);
+    });
+
+    document.body.appendChild(menu);
+
+    const wrapper = document.querySelector(`[data-msg-id="${msgId}"]`);
+    const bubble = wrapper.querySelector('.chat-bubble');
+    const rect = bubble.getBoundingClientRect();
+
+    const isSelf = wrapper.classList.contains('items-end');
+
+    // posição vertical → sempre abaixo do balão
+    const top = rect.bottom + 6;
+
+    // posição horizontal
+    let left;
+
+    if (isSelf) {
+        // ancora pela direita
+        left = rect.right - menu.offsetWidth;
+    } else {
+        // ancora pela esquerda
+        left = rect.left;
+    }
+
+    // proteção contra sair da tela
+    left = Math.max(8, Math.min(left, window.innerWidth - menu.offsetWidth - 8));
+
+    menu.style.top = `${top}px`;
+    menu.style.left = `${left}px`;
+
+
+    setTimeout(() => {
+        document.addEventListener("click", () => menu.remove(), { once: true });
+    }, 50);
+}
+
+
 // --- Menu de Ações ---
 const openActionsMenu = (triggerEl, msgId, text) => {
     const wrapper = document.querySelector(`.message-wrapper[data-msg-id="${msgId}"]`);
@@ -368,7 +463,13 @@ const openActionsMenu = (triggerEl, msgId, text) => {
         { icon: 'fa-lightbulb', label: 'Contexto', class: 'opt-context', action: () => Modals.handleAction('context', text, msgId) },
         { icon: 'fa-graduation-cap', label: 'Estudar', class: 'opt-study', action: () => Modals.handleAction('study', text, msgId) },
         { icon: 'fa-random', label: 'Variações', class: 'opt-vars', action: () => Modals.handleAction('variations', text, msgId) },
-        { icon: 'fa-copy', label: 'Copiar', action: () => navigator.clipboard.writeText(text) }
+        { icon: 'fa-copy', label: 'Copiar', action: () => navigator.clipboard.writeText(text) },
+        {
+            icon: 'fa-face-smile',
+            label: 'Reagir',
+            action: () => openReactionPicker(msgId)
+        }
+
     ];
 
     options.forEach(opt => {
@@ -400,3 +501,17 @@ const openActionsMenu = (triggerEl, msgId, text) => {
     };
     setTimeout(() => document.addEventListener('click', closeMenu), 100);
 };
+
+export async function toggleReaction(msgId, emoji) {
+    if (!state.currentRoom || !msgId) return;
+
+    const path = `messages/${state.currentRoom}/${msgId}/reactions/${emoji}/${state.userId}`;
+    const reactionRef = ref(db, path);
+
+    const wrapper = document.querySelector(`.message-wrapper[data-msg-id="${msgId}"]`);
+    const hasReacted = wrapper?.dataset?.[`react_${emoji}`] === "true";
+
+    await update(ref(db), {
+        [path]: hasReacted ? null : true
+    });
+}

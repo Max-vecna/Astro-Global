@@ -149,7 +149,7 @@ body[data-bubble-style="pixel"] .items-start .chat-bubble {
     background-color: #f87171; color: white; border-color: white;
 }
 
-
+.items-start, .items-end{align-items: flex-end;}
 /* 9. Glass / Frosted */
 body[data-bubble-style="glass"] .chat-bubble {
     background: rgba(255, 255, 255, 0.12);
@@ -221,6 +221,8 @@ body[data-bg-style="grid"] {
     align-items: center;
     gap: 4px;
     user-select: none;
+    display: flex;
+    flex-direction: column;
 }
 
 .meta-self {
@@ -375,7 +377,7 @@ body[data-bg-style="matrix"] {
     font-weight: 500;
     margin-bottom: 4px;
     min-height: 1.2em;
-    white-space: break-spaces;
+    white-space: normal;
 }
 
 .original-text {
@@ -660,6 +662,7 @@ textarea:focus {
 /* Quando a tradução estiver pronta */
 .speak-btn.ready {
     display: inline-flex;
+    margin-bottom: 7px;
 }
 
 /* =========================================================
@@ -921,4 +924,93 @@ body[data-chat-bg="cartoon"] #messages-container, body[data-chat-bg="cartoon"] #
     100% {
         filter: drop-shadow(0 6px 8px rgba(0,0,0,0.2));
     }
+}
+
+@media (max-width: 767px) {
+  #user-avatars-container {
+    display: none !important;
+  }
+}
+
+/* === REAÇÕES === */
+
+.reaction-bar {
+    display: flex;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 999px;
+}
+
+
+.reaction-pill {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.reaction-pill:hover {
+    transform: scale(1.05);
+    background: rgba(255,255,255,0.25);
+}
+
+.reaction-pill.active {
+    background: #4f46e5;
+    border-color: #4f46e5;
+    color: white;
+}
+
+/* seletor */
+.reaction-picker {
+    position: fixed;
+    display: flex;
+    gap: 6px;
+    padding: 6px 8px;
+    background: rgba(20,20,30,0.95);
+    border-radius: 12px;
+    z-index: 9999;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+.reaction-picker button {
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.reaction-picker button:hover {
+    transform: scale(1.3);
+}
+
+.message-wrapper {
+    position: relative;
+}
+
+/* Indicador de digitação */
+#typing-indicator-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start !important;
+    margin-top: 6px;
+    margin-bottom: 4px;
+    min-height: 24px;
+}
+
+/* Wrapper individual do "digitando" */
+#typing-indicator-container > div {
+    align-self: flex-start;
+    max-width: 80%;
+}
+.typing-wrapper .chat-bubble {
+    border-radius: 16px;
+    opacity: 0.7;
+    font-style: italic;
+}
+
+.message-wrapper.items-start.bublle
+{
+    align-items: self-end !important;
 }

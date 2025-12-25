@@ -85,6 +85,10 @@ export async function traduzir(texto, targetLang) {
     - forneça "texto_corrigido"
     - forneça "explicacao"
     - NÃO traduza o texto
+    - Desconsidere textos arrastados propositalmente exemplos: oiiiii -> oi, comooooo -> como, commmmo -> como, etc.
+    - Desconsidere erros de pontuação desde que não vá alterar o sentido da frase.
+    - Desconsidere textos muito grandes.
+    - Ignore quebras de linha, desde que a frase faça sentido quando unida.
 
     4. Se NÃO houver erros:
     - traduza o texto para ${idioma}
