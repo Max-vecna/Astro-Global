@@ -72,6 +72,7 @@ export const joinRoom = async (roomCode, name) => {
 };
 
 export const joinAiRoom = async () => {
+    try {
     await cleanupRoomListeners();
     
     // Cria um ID único para a sala privada com a IA
@@ -115,6 +116,11 @@ export const joinAiRoom = async () => {
             timestamp: Date.now()
         };
         Chat.renderMessage(welcomeMsg, 'welcome_msg');
+    }
+    } catch(e) {
+        console.error("Erro ao entrar na sala IA", e);
+        Utils.showToast("Erro ao entrar na sala IA.", "error");
+        alert("Erro ao entrar na sala IA. Tente novamente mais tarde.");
     }
 };
 
