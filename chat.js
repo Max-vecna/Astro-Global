@@ -500,8 +500,21 @@ function handleTextSelection() {
     selectionBtn.innerHTML = '<i class="fas fa-volume-high"></i> Ouvir seleção';
 
     // posição segura (funciona no mobile)
-    const top = rect.top - 42;
-    const left = rect.left + rect.width / 2 - 60;
+    const viewportOffset = window.visualViewport?.offsetTop || 0;
+
+    // POSICIONA ABAIXO DA SELEÇÃO (evita conflito com barra nativa)
+    let top = rect.bottom + 12 + viewportOffset;
+
+    // fallback se sair da tela
+    if (top + 48 > window.innerHeight) {
+        top = rect.top - 52;
+    }
+
+    let left = rect.left + rect.width / 2 - 60;
+
+    // mantém dentro da tela
+    left = Math.max(10, Math.min(left, window.innerWidth - 130));
+
 
     selectionBtn.style.top = `${Math.max(10, top)}px`;
     selectionBtn.style.left = `${Math.max(10, left)}px`;
@@ -524,6 +537,12 @@ function handleTextSelection() {
     });
 
     document.body.appendChild(selectionBtn);
+
+    selectionBtn.style.pointerEvents = 'auto';
+    selectionBtn.style.touchAction = 'manipulation';
+    selectionBtn.style.userSelect = 'none';
+    selectionBtn.style.webkitUserSelect = 'none';
+    selectionBtn.style.zIndex = '999999';
 }
 
 // Exposto para uso no HTML (ex: window.Chat.speakText)
