@@ -14,22 +14,25 @@ if ("serviceWorker" in navigator) {
 }
 
 // --- Initialization ---
-window.onload = async () => {
+const initApp = async () => {
     Utils.updateThemeButtons(document.body.dataset.theme || 'dark');
     if ("Notification" in window) Utils.updateNotifIcon();
-    else DOMElements.notifBtn.style.display = 'none';
+    else if (DOMElements.notifBtn) DOMElements.notifBtn.style.display = 'none';
 
-    DOMElements.roomLangSelector.value = state.currentTranslationLang;
-    DOMElements.introLangSelector.value = state.currentTranslationLang;
+    if (DOMElements.roomLangSelector) DOMElements.roomLangSelector.value = state.currentTranslationLang;
+    if (DOMElements.introLangSelector) DOMElements.introLangSelector.value = state.currentTranslationLang;
 
     // Splash Animation
     await new Promise(res => setTimeout(res, 1200));
-    DOMElements.splash.style.opacity = 0;
-    DOMElements.app.style.opacity = 1;
-    setTimeout(() => DOMElements.splash.classList.add('hidden'), 500);
+    if (DOMElements.splash) {
+        DOMElements.splash.style.opacity = 0;
+        setTimeout(() => DOMElements.splash.classList.add('hidden'), 500);
+    }
+
+    if (DOMElements.app) DOMElements.app.style.opacity = 1;
 
     if (state.nickname) {
-        DOMElements.lobbyNickname.textContent = state.nickname;
+        if(DOMElements.lobbyNickname) DOMElements.lobbyNickname.textContent = state.nickname;
         Utils.switchScreen('lobby');
     } else {
         Utils.switchScreen('nickname');
@@ -45,138 +48,171 @@ window.onload = async () => {
     if(DOMElements.bgStyleSelector) DOMElements.bgStyleSelector.value = savedBg;
     
     // Init Voices
-    if ('speechSynthesis' in window) speechSynthesis.getVoices();
+    if ('speechSynthesis' in window) {
+        try {
+            speechSynthesis.getVoices();
+        } catch(e) { console.error("Voices error", e); }
+    }
 };
+
+// Verifica se o DOM já foi carregado para evitar travamento no mobile
+if (document.readyState === 'complete') {
+    initApp();
+} else {
+    window.addEventListener('load', initApp);
+}
 
 // --- Event Listeners ---
 
 // Input de Mensagem e Digitação
-DOMElements.messageInput.addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = (this.scrollHeight) + 'px';
-    
-    // Na sala IA, não enviamos "typing" para outros usuários, apenas local ou mockado se quisessemos
-    if (state.isAiRoom) return;
+if (DOMElements.messageInput) {
+    DOMElements.messageInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+        
+        // Na sala IA, não enviamos "typing" para outros usuários, apenas local ou mockado se quisessemos
+        if (state.isAiRoom) return;
 
-    const typingRef = ref(db, `typing/${state.currentRoom}/${state.userId}`);
-    if (this.value) {
-        set(typingRef, { nickname: state.nickname, text: this.value.substring(0, 60) });
-        if (state.typingTimeout) clearTimeout(state.typingTimeout);
-        state.typingTimeout = setTimeout(() => set(typingRef, null), 3000);
-    } else { set(typingRef, null); 
-        }
-});
+        const typingRef = ref(db, `typing/${state.currentRoom}/${state.userId}`);
+        if (this.value) {
+            set(typingRef, { nickname: state.nickname, text: this.value.substring(0, 60) });
+            if (state.typingTimeout) clearTimeout(state.typingTimeout);
+            state.typingTimeout = setTimeout(() => set(typingRef, null), 3000);
+        } else { set(typingRef, null); 
+            }
+    });
 
-DOMElements.messageInput.onkeydown = (e) => { 
-    if(e.key === 'Enter' && !e.shiftKey) { 
-        e.preventDefault(); 
-        Chat.sendMessage(); 
-    } 
-};
+    DOMElements.messageInput.onkeydown = (e) => { 
+        if(e.key === 'Enter' && !e.shiftKey) { 
+            e.preventDefault(); 
+            Chat.sendMessage(); 
+        } 
+    };
+}
 
-DOMElements.sendBtn.onclick = Chat.sendMessage;
+if (DOMElements.sendBtn) DOMElements.sendBtn.onclick = Chat.sendMessage;
+
+// NOVO: Listener para o botão de limpar histórico
+if (DOMElements.clearChatBtn) {
+    DOMElements.clearChatBtn.onclick = Chat.clearHistory;
+}
 
 // Seletores de Idioma e Estilo
-DOMElements.roomLangSelector.addEventListener('change', (e) => {
-    state.currentTranslationLang = e.target.value;
-    localStorage.setItem('astroUserLang', e.target.value);
-    Utils.showToast(`Idioma alterado para ${e.target.value.toUpperCase()}`, 'success');
-    Chat.retranslateAllMessages(e.target.value);
-});
+if (DOMElements.roomLangSelector) {
+    DOMElements.roomLangSelector.addEventListener('change', (e) => {
+        state.currentTranslationLang = e.target.value;
+        localStorage.setItem('astroUserLang', e.target.value);
+        Utils.showToast(`Idioma alterado para ${e.target.value.toUpperCase()}`, 'success');
+        Chat.retranslateAllMessages(e.target.value);
+    });
+}
 
-DOMElements.bubbleStyleSelector?.addEventListener('change', (e) => {
-    document.body.setAttribute('data-bubble-style', e.target.value);
-    localStorage.setItem('astroBubbleStyle', e.target.value);
-});
+if (DOMElements.bubbleStyleSelector) {
+    DOMElements.bubbleStyleSelector.addEventListener('change', (e) => {
+        document.body.setAttribute('data-bubble-style', e.target.value);
+        localStorage.setItem('astroBubbleStyle', e.target.value);
+    });
+}
 
-DOMElements.bgStyleSelector?.addEventListener('change', (e) => {
-    document.body.setAttribute('data-bg-style', e.target.value);
-    localStorage.setItem('astroBgStyle', e.target.value);
-});
+if (DOMElements.bgStyleSelector) {
+    DOMElements.bgStyleSelector.addEventListener('change', (e) => {
+        document.body.setAttribute('data-bg-style', e.target.value);
+        localStorage.setItem('astroBgStyle', e.target.value);
+    });
+}
 
 // Botões de IA
-DOMElements.grammarBtn.addEventListener('click', Modals.handleGrammarCheck);
+if (DOMElements.grammarBtn) DOMElements.grammarBtn.addEventListener('click', Modals.handleGrammarCheck);
 
-DOMElements.rewriteBtn.addEventListener('click', async () => {
-    const input = DOMElements.messageInput;
-    const originalText = input.value.trim();
-    if (!originalText) return;
-    
-    const btnIcon = DOMElements.rewriteBtn.querySelector('i');
-    btnIcon.className = "fas fa-spinner fa-spin";
-    DOMElements.rewriteBtn.classList.add('magic-pulse');
-    input.disabled = true; input.style.opacity = "0.7";
-    
-    try {
-        const novoTexto = await Services.reescreverTexto(originalText);
-        input.value = novoTexto; input.focus(); Utils.showToast("Melhorado!", "success");
-    } catch (error) { Utils.showToast("Erro.", "error"); } 
-    finally {
-        input.disabled = false; input.style.opacity = "1";
-        btnIcon.className = "fas fa-magic"; DOMElements.rewriteBtn.classList.remove('magic-pulse');
-    }
-});
+if (DOMElements.rewriteBtn) {
+    DOMElements.rewriteBtn.addEventListener('click', async () => {
+        const input = DOMElements.messageInput;
+        const originalText = input.value.trim();
+        if (!originalText) return;
+        
+        const btnIcon = DOMElements.rewriteBtn.querySelector('i');
+        btnIcon.className = "fas fa-spinner fa-spin";
+        DOMElements.rewriteBtn.classList.add('magic-pulse');
+        input.disabled = true; input.style.opacity = "0.7";
+        
+        try {
+            const novoTexto = await Services.reescreverTexto(originalText);
+            input.value = novoTexto; input.focus(); Utils.showToast("Melhorado!", "success");
+        } catch (error) { Utils.showToast("Erro.", "error"); } 
+        finally {
+            input.disabled = false; input.style.opacity = "1";
+            btnIcon.className = "fas fa-magic"; DOMElements.rewriteBtn.classList.remove('magic-pulse');
+        }
+    });
+}
 
 // Botões de Navegação e Configuração
-DOMElements.saveNicknameBtn.onclick = async () => {
-    const val = DOMElements.nicknameInput.value.trim();
-    const langVal = DOMElements.introLangSelector.value;
-    if(val) { 
-        await Room.updateNicknameHistory(val);
-        localStorage.setItem('astroNickname', val);
-        localStorage.setItem('astroUserLang', langVal);
-        localStorage.setItem('astroUserLangGlobal', langVal);
-        location.reload(); 
-    }
-};
+if (DOMElements.saveNicknameBtn) {
+    DOMElements.saveNicknameBtn.onclick = async () => {
+        const val = DOMElements.nicknameInput.value.trim();
+        const langVal = DOMElements.introLangSelector.value;
+        if(val) { 
+            await Room.updateNicknameHistory(val);
+            localStorage.setItem('astroNickname', val);
+            localStorage.setItem('astroUserLang', langVal);
+            localStorage.setItem('astroUserLangGlobal', langVal);
+            location.reload(); 
+        }
+    };
+}
 
-DOMElements.changeNicknameBtn.onclick = () => { localStorage.removeItem('astroNickname'); location.reload(); };
-DOMElements.clearDataBtn.onclick = () => { if(confirm('Tem certeza?')) { localStorage.clear(); location.reload(); } };
-DOMElements.notifBtn.onclick = Utils.unlockAudioAndRequestPermission;
+if (DOMElements.changeNicknameBtn) DOMElements.changeNicknameBtn.onclick = () => { localStorage.removeItem('astroNickname'); location.reload(); };
+if (DOMElements.clearDataBtn) DOMElements.clearDataBtn.onclick = () => { if(confirm('Tem certeza?')) { localStorage.clear(); location.reload(); } };
+if (DOMElements.notifBtn) DOMElements.notifBtn.onclick = Utils.unlockAudioAndRequestPermission;
 document.body.addEventListener('click', () => { if(!state.audioUnlocked) Utils.unlockAudioAndRequestPermission(); }, { once: true });
 
 // Modals Triggers
-DOMElements.newConversationBtn.onclick = () => { DOMElements.roomActionsModal.classList.remove('hidden'); DOMElements.roomActionsModal.classList.add('flex'); };
+if (DOMElements.newConversationBtn) DOMElements.newConversationBtn.onclick = () => { DOMElements.roomActionsModal.classList.remove('hidden'); DOMElements.roomActionsModal.classList.add('flex'); };
 // Evento para o botão de Sala IA (NOVO)
-DOMElements.aiRoomBtn.onclick = Room.joinAiRoom;
+if (DOMElements.aiRoomBtn) DOMElements.aiRoomBtn.onclick = Room.joinAiRoom;
 
-DOMElements.closeRoomActionsModalBtn.onclick = () => { DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); };
+if (DOMElements.closeRoomActionsModalBtn) DOMElements.closeRoomActionsModalBtn.onclick = () => { DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); };
 
-DOMElements.modalCreateRoomBtn.onclick = async () => {
-    const code = Math.random().toString(36).substring(2, 7).toUpperCase();
-    const name = DOMElements.modalRoomNameInput.value.trim() || "Nova Sala";
+if (DOMElements.modalCreateRoomBtn) {
+    DOMElements.modalCreateRoomBtn.onclick = async () => {
+        const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+        const name = DOMElements.modalRoomNameInput.value.trim() || "Nova Sala";
 
-    await Room.createRoom(code, name);
+        await Room.createRoom(code, name);
 
-    DOMElements.roomActionsModal.classList.add('hidden');
-    DOMElements.roomActionsModal.classList.remove('flex');
+        DOMElements.roomActionsModal.classList.add('hidden');
+        DOMElements.roomActionsModal.classList.remove('flex');
 
-    navigator.clipboard.writeText(code);
-};
+        navigator.clipboard.writeText(code);
+    };
+}
 
+if (DOMElements.modalConfirmJoinBtn) {
+    DOMElements.modalConfirmJoinBtn.onclick = () => { 
+        const code = DOMElements.modalRoomCodeInput.value.trim().toUpperCase(); 
+        if(code) { 
+            Room.joinRoom(code); 
+            DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); 
+        } 
+    };
+}
 
-DOMElements.modalConfirmJoinBtn.onclick = () => { 
-    const code = DOMElements.modalRoomCodeInput.value.trim().toUpperCase(); 
-    if(code) { 
-        Room.joinRoom(code); 
-        DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); 
-    } 
-};
+if (DOMElements.settingsBtn) DOMElements.settingsBtn.onclick = () => { DOMElements.settingsModal.classList.remove('hidden'); DOMElements.settingsModal.classList.add('flex'); };
+if (DOMElements.closeSettingsModalBtn) DOMElements.closeSettingsModalBtn.onclick = () => { DOMElements.settingsModal.classList.add('hidden'); DOMElements.settingsModal.classList.remove('flex'); };
 
-DOMElements.settingsBtn.onclick = () => { DOMElements.settingsModal.classList.remove('hidden'); DOMElements.settingsModal.classList.add('flex'); };
-DOMElements.closeSettingsModalBtn.onclick = () => { DOMElements.settingsModal.classList.add('hidden'); DOMElements.settingsModal.classList.remove('flex'); };
-
-DOMElements.themeBtns.forEach(btn => btn.onclick = () => { localStorage.setItem('astroTheme', btn.dataset.theme); location.reload(); });
-DOMElements.leaveBtn.onclick = Room.leaveRoom;
-DOMElements.roomCodeDisplay.onclick = () => { 
-    if (state.isAiRoom) return;
-    navigator.clipboard.writeText(state.currentRoom); Utils.showToast("Código copiado!"); 
-};
+if (DOMElements.themeBtns) DOMElements.themeBtns.forEach(btn => btn.onclick = () => { localStorage.setItem('astroTheme', btn.dataset.theme); location.reload(); });
+if (DOMElements.leaveBtn) DOMElements.leaveBtn.onclick = Room.leaveRoom;
+if (DOMElements.roomCodeDisplay) {
+    DOMElements.roomCodeDisplay.onclick = () => { 
+        if (state.isAiRoom) return;
+        navigator.clipboard.writeText(state.currentRoom); Utils.showToast("Código copiado!"); 
+    };
+}
 
 // Fechamento de Modals
-DOMElements.closeStudyModalBtn.onclick = () => { DOMElements.studyModal.classList.add('hidden'); DOMElements.studyModal.classList.remove('flex'); };
-DOMElements.closeGrammarModalBtn.onclick = () => { DOMElements.grammarModal.classList.add('hidden'); DOMElements.grammarModal.classList.remove('flex'); };
-DOMElements.closeGenericModalBtn.onclick = () => { DOMElements.genericModal.classList.add('hidden'); DOMElements.genericModal.classList.remove('flex'); };
+if (DOMElements.closeStudyModalBtn) DOMElements.closeStudyModalBtn.onclick = () => { DOMElements.studyModal.classList.add('hidden'); DOMElements.studyModal.classList.remove('flex'); };
+if (DOMElements.closeGrammarModalBtn) DOMElements.closeGrammarModalBtn.onclick = () => { DOMElements.grammarModal.classList.add('hidden'); DOMElements.grammarModal.classList.remove('flex'); };
+if (DOMElements.closeGenericModalBtn) DOMElements.closeGenericModalBtn.onclick = () => { DOMElements.genericModal.classList.add('hidden'); DOMElements.genericModal.classList.remove('flex'); };
 
 // ===============================
 // FUNDO DO CHAT (WhatsApp style)

@@ -717,3 +717,42 @@ async function requestReview(originalText) {
         if(typingContainer) typingContainer.classList.add('hidden');
     }
 }
+
+// === NOVA FUNÇÃO: LIMPAR HISTÓRICO ===
+export const clearHistory = async () => {
+    if (!state.currentRoom) return;
+
+    // Confirmação de segurança
+    const confirmText = state.isAiRoom 
+        ? "Deseja apagar toda a conversa com o Astro Mentor?" 
+        : "CUIDADO: Isso apagará o histórico da sala para TODOS os participantes. Continuar?";
+
+    if (!confirm(confirmText)) return;
+
+    try {
+        // 1. Apaga do Firebase (definindo como null)
+        await set(ref(db, `messages/${state.currentRoom}`), null);
+        
+        // 2. Limpa a interface localmente imediatamente
+        DOMElements.messagesList.innerHTML = '';
+        DOMElements.messagesList.appendChild(DOMElements.typingIndicatorContainer);
+        
+        Utils.showToast("Conversa limpa com sucesso!", "success");
+
+        // Se for sala de IA, podemos reinserir a mensagem de boas-vindas opcionalmente
+        if (state.isAiRoom) {
+            const welcomeMsg = {
+                userId: 'AI_BOT',
+                nickname: 'Astro Mentor',
+                text: `Memória reiniciada! Sobre o que vamos falar agora?`,
+                timestamp: Date.now()
+            };
+            // Pequeno delay para parecer natural
+            setTimeout(() => renderMessage(welcomeMsg, 'welcome_reset'), 500);
+        }
+
+    } catch (e) {
+        console.error(e);
+        Utils.showToast("Erro ao limpar conversa.", "error");
+    }
+};
