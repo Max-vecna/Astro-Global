@@ -10,9 +10,8 @@ import * as Modals from './modals.js';
 import { ref, push, set, update, get, query, limitToLast, orderByKey } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // --- Envio de Mensagens ---
-export const sendMessage = async (overrideText = null) => {
-    // Permite enviar texto passado por parâmetro (útil para as sugestões)
-    const text = overrideText || DOMElements.messageInput.value.trim();
+export const sendMessage = async () => {
+    const text = DOMElements.messageInput.value.trim();
     if (!text || !state.currentRoom) return;
  
     const payload = {
@@ -32,9 +31,10 @@ export const sendMessage = async (overrideText = null) => {
  
     await push(ref(db, `messages/${state.currentRoom}`), payload);
 
+    // 🔥 LIMPA O "digitando..." imediatamente
     await set(ref(db, `typing/${state.currentRoom}/${state.userId}`), null);
 
-    if (!overrideText) DOMElements.messageInput.value = '';
+    DOMElements.messageInput.value = '';
     clearReply();
 
     // === Lógica de Resposta da IA (Modo Mentor) ===
@@ -44,14 +44,17 @@ export const sendMessage = async (overrideText = null) => {
 };
 
 const triggerAiResponse = async (userText) => {
+    // Simula digitação da IA
     const aiId = 'AI_BOT';
     const typingRef = ref(db, `typing/${state.currentRoom}/${aiId}`);
     
+    // Pequeno delay natural antes de começar a digitar
     setTimeout(() => {
         set(typingRef, { nickname: 'Astro Mentor', text: 'Digitando...' });
     }, 600);
 
     try {
+        // Recupera contexto recente (últimas 6 mensagens)
         const msgsRef = query(ref(db, `messages/${state.currentRoom}`), orderByKey(), limitToLast(6));
         const snap = await get(msgsRef);
         const history = [];
@@ -60,15 +63,14 @@ const triggerAiResponse = async (userText) => {
             history.push({ role: v.userId === aiId ? 'Astro Mentor' : 'User', text: v.text });
         });
 
-        // Agora esperamos um objeto { text, suggestions }
-        const responseObj = await Services.conversarComIA(history, state.currentTranslationLangGlobal);
+        // Chama o serviço de IA
+        const responseText = await Services.conversarComIA(history, state.currentTranslationLangGlobal);
 
+        // Remove digitação e envia resposta
         await set(typingRef, null);
         
-        // Salvamos as sugestões junto com a mensagem no Firebase
         await push(ref(db, `messages/${state.currentRoom}`), {
-            text: responseObj.text || responseObj, // Fallback se vier string pura
-            suggestions: responseObj.suggestions || [],
+            text: responseText,
             nickname: 'Astro Mentor',
             userId: aiId,
             timestamp: Date.now()
@@ -116,7 +118,7 @@ export async function updateMessageText(msgId, newText) {
     await update(msgRef, {
         text: newText.trim(),
         timestamp: Date.now(),
-        hasError: null 
+        hasError: null // Remove o estado de erro ao editar
     });
 }
 
@@ -186,6 +188,9 @@ export const renderMessage = (msgData, msgId) => {
     const safeText = msgData.text.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, '<br>');
     const translationId = `trans-${msgId}`;
     
+    // Na sala de IA, mudamos a estrutura para NÃO mostrar tradução automaticamente
+    // Se isAiRoom for true, o layout é mais simples (texto direto), sem o bloco 'translated-text' dominante
+    
     if (state.isAiRoom) {
          contentHTML += `
             <div class="original-text" style="font-size: 1rem; font-style: normal; opacity: 1; border: none; padding-top: 0;">${safeText}</div>
@@ -195,19 +200,9 @@ export const renderMessage = (msgData, msgId) => {
                     <i class="fas fa-volume-high"></i>
                 </button>
             </div>
+            <!-- Container oculto caso o usuario peça tradução manual depois -->
             <div id="${translationId}" class="translated-text hidden text-xs text-yellow-300 mt-2 border-t border-white/10 pt-2"></div>
         `;
-        
-        // === RENDERIZAR SUGESTÕES DE RESPOSTA ===
-        if (msgData.suggestions && Array.isArray(msgData.suggestions) && msgData.suggestions.length > 0) {
-            contentHTML += `<div class="suggestions-list">`;
-            msgData.suggestions.forEach((sug, index) => {
-                // Usamos um atributo data-suggestion para recuperar no click event abaixo
-                contentHTML += `<button class="suggestion-pill" data-suggestion="${sug}">${sug}</button>`;
-            });
-            contentHTML += `</div>`;
-        }
-
     } else {
         // Layout Padrão com Tradução
         let currentTrans = '';
@@ -244,11 +239,6 @@ export const renderMessage = (msgData, msgId) => {
 
     bubble.innerHTML = contentHTML;
     
-    // Event Listeners para os botões de sugestão
-    // Precisamos fazer isso ANTES de adicionar ao DOM ou usar delegação no messageWrapper
-    // Aqui adicionamos ao bubble, mas o bubble é HTML string até agora.
-    // Vamos adicionar listeners após o append.
-
     if (!state.isAiRoom) {
         const speakBtn = bubble.querySelector('.speak-btn');
         if (speakBtn) {
@@ -265,20 +255,20 @@ export const renderMessage = (msgData, msgId) => {
         messageWrapper.appendChild(bubble);
     }
 
-    // Adicionar Listener de Sugestões (Delegation dentro do bubble)
     bubble.addEventListener('click', (e) => {
-        const sugBtn = e.target.closest('.suggestion-pill');
-        if (sugBtn) {
-            e.stopPropagation();
-            const text = sugBtn.dataset.suggestion;
-            sendMessage(text); // Envia direto
-            return;
-        }
-
         if (e.target.closest('.speak-btn')) return;
         if (window.getSelection().toString().length > 0) return;
         openActionsMenu(bubble, msgId, msgData.text);
     });
+
+    // Se estivermos em sala comum, checa botão de falar
+    if (!state.isAiRoom) {
+        const existingTranslation = existingMsgEl?.querySelector('.translated-text')?.textContent?.trim();
+        if (existingTranslation) {
+            const btn = bubble.querySelector('.speak-btn');
+            if (btn) btn.classList.add('ready');
+        }
+    }
 
 
     if (existingMsgEl) {
@@ -330,6 +320,7 @@ export const renderMessage = (msgData, msgId) => {
 
 // --- Tradução ---
 export const performTranslation = async (msgId, originalText, lang) => {
+    // Se for sala de IA, ignoramos tradução automática
     if (state.isAiRoom) return;
 
     const el = document.getElementById(`trans-${msgId}`);
@@ -338,10 +329,12 @@ export const performTranslation = async (msgId, originalText, lang) => {
     const wrapper = el.closest('.message-wrapper');
     const speakBtn = wrapper?.querySelector('.speak-btn');
 
+    // esconder botão enquanto carrega
     if (speakBtn && el.textContent.trim() === '') {
         speakBtn.classList.remove('ready');
     }
 
+    // loading
     el.classList.add('loading');
     el.innerHTML = '<i class="fas fa-circle-notch fa-spin text-xs opacity-50"></i>';
 
@@ -354,6 +347,7 @@ export const performTranslation = async (msgId, originalText, lang) => {
         const hasCorrection =
             typeof result === 'object' && result.temErro === true;
 
+        // remove loading ANTES de renderizar o conteúdo
         el.classList.remove('loading');
 
         el.textContent = translatedText;
@@ -433,22 +427,117 @@ async function speakTranslatedMessage(msgId) {
     speakGeneric(text, msgId);
 }
 
+// === LÓGICA DE SELEÇÃO DE TEXTO (DESKTOP + MOBILE) ===
+
+let selectionBtn = null;
+let selectionTimeout = null;
+
+// Remove botão se clicar fora
+document.addEventListener('mousedown', e => {
+    if (selectionBtn && !selectionBtn.contains(e.target)) {
+        selectionBtn.remove();
+        selectionBtn = null;
+    }
+});
+
+document.addEventListener('touchstart', e => {
+    if (selectionBtn && !selectionBtn.contains(e.target)) {
+        selectionBtn.remove();
+        selectionBtn = null;
+    }
+});
+
+// Desktop
+document.addEventListener('mouseup', () => {
+    clearTimeout(selectionTimeout);
+    selectionTimeout = setTimeout(handleTextSelection, 80);
+});
+
+// Mobile (dispara após seleção por long-press)
+document.addEventListener('touchend', () => {
+    clearTimeout(selectionTimeout);
+    selectionTimeout = setTimeout(handleTextSelection, 120);
+});
+
+// iOS / Android disparam isso quando a seleção muda
+document.addEventListener('selectionchange', () => {
+    clearTimeout(selectionTimeout);
+    selectionTimeout = setTimeout(handleTextSelection, 150);
+});
+
+function handleTextSelection() {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const text = selection.toString().trim();
+    if (!text) return;
+
+    // remove botão antigo
+    if (selectionBtn) {
+        selectionBtn.remove();
+        selectionBtn = null;
+    }
+
+    // garante que a seleção esteja dentro de uma mensagem
+    const anchorNode = selection.anchorNode;
+    const anchorEl =
+        anchorNode?.nodeType === 3 ? anchorNode.parentElement : anchorNode;
+
+    if (!anchorEl) return;
+
+    const bubble = anchorEl.closest('.chat-bubble');
+    if (!bubble) return;
+
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+
+    if (!rect || rect.width === 0 || rect.height === 0) return;
+
+    selectionBtn = document.createElement('button');
+    selectionBtn.className =
+        'fixed z-[9999] bg-[var(--primary-color)] hover:opacity-90 text-white px-3 py-1.5 rounded-full shadow-lg text-xs font-bold flex items-center gap-2 border border-white/20 select-none';
+
+    selectionBtn.innerHTML = '<i class="fas fa-volume-high"></i> Ouvir seleção';
+
+    // posição segura (funciona no mobile)
+    const top = rect.top - 42;
+    const left = rect.left + rect.width / 2 - 60;
+
+    selectionBtn.style.top = `${Math.max(10, top)}px`;
+    selectionBtn.style.left = `${Math.max(10, left)}px`;
+
+    // evita perder seleção no toque
+    selectionBtn.addEventListener('touchstart', e => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    selectionBtn.addEventListener('mousedown', e => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    selectionBtn.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        speakGeneric(text, null, selectionBtn);
+    });
+
+    document.body.appendChild(selectionBtn);
+}
+
+// Exposto para uso no HTML (ex: window.Chat.speakText)
 window.Chat = window.Chat || {};
 window.Chat.speakText = (msgId) => {
+    // Na sala IA, lê o texto original do balão
     const wrapper = document.querySelector(`.message-wrapper[data-msg-id="${msgId}"]`);
     if(!wrapper) return;
     const text = wrapper.querySelector('.original-text').innerText;
     speakGeneric(text, msgId);
 };
 
-// Modificada para aceitar um botão genérico para loading (útil para o botão de seleção)
-async function speakGeneric(text, msgId = null, btnElement = null) {
-    if(msgId) setSpeakLoading(msgId);
-    if(btnElement) {
-        const i = btnElement.querySelector('i');
-        if(i) i.className = 'fas fa-circle-notch fa-spin';
-    }
-
+async function speakGeneric(text, msgId) {
+    setSpeakLoading(msgId);
     speechSynthesis.cancel();
 
     let detectedLang = null;
@@ -461,17 +550,9 @@ async function speakGeneric(text, msgId = null, btnElement = null) {
     utterance.lang = detectedLang || 'en-US';
     utterance.rate = 0.9;
 
-    const resetUI = () => {
-        if(msgId) setSpeakIdle(msgId);
-        if(btnElement) {
-            const i = btnElement.querySelector('i');
-            if(i) i.className = 'fas fa-volume-high';
-        }
-    };
-
-    utterance.onstart = resetUI;
-    utterance.onend = resetUI;
-    utterance.onerror = resetUI;
+    utterance.onstart = () => setSpeakIdle(msgId);
+    utterance.onend = () => setSpeakIdle(msgId);
+    utterance.onerror = () => setSpeakIdle(msgId);
 
     speechSynthesis.speak(utterance);
 }
@@ -538,15 +619,13 @@ const openActionsMenu = (triggerEl, msgId, text) => {
     
     let options = [];
 
+    // Menu Simplificado para Sala de IA
     if (state.isAiRoom) {
          options = [
             { icon: 'fa-copy', label: 'Copiar', action: () => navigator.clipboard.writeText(text) },
             { icon: 'fa-graduation-cap', label: 'Estudar Frase', class: 'opt-study', action: () => Modals.openStudyModal(text) },
-            { icon: 'fa-globe', label: 'Traduzir manualmente', action: () => Modals.openTranslateToModal(text) }
+            { icon: 'fa-globe', label: 'Traduzir manualmente', action: () => Modals.openTranslateToModal(text) },
          ];
-
-         // === NOVO CÓDIGO AQUI ===
-         // Se a mensagem NÃO for do usuário atual (ou seja, é do Bot), mostra o botão de revisão
          if (msgUserId !== state.userId) {
              options.push({
                  icon: 'fa-magnifying-glass-chart', // Ícone de análise
@@ -555,9 +634,8 @@ const openActionsMenu = (triggerEl, msgId, text) => {
                  action: () => requestReview(text)
              });
          }
-         // ========================
-
     } else {
+        // Menu Padrão
         options = hasCorrection
         ? [
             { icon: 'fa-pen', label: 'Corrigir mensagem', action: () => Modals.openEditMessageModal(msgId, text) }
@@ -620,70 +698,6 @@ export async function toggleReaction(msgId, emoji) {
         [path]: hasReacted ? null : true
     });
 }
-
-// === LÓGICA DE SELEÇÃO DE TEXTO E AUDIO ===
-let selectionBtn = null;
-
-// Detecta fim da seleção
-document.addEventListener('mouseup', (e) => {
-    // Pequeno delay para garantir que a seleção foi processada pelo navegador
-    setTimeout(() => handleTextSelection(), 50); 
-});
-
-// Remove o botão se clicar fora
-document.addEventListener('mousedown', (e) => {
-    if (selectionBtn && !selectionBtn.contains(e.target)) {
-        selectionBtn.remove();
-        selectionBtn = null;
-    }
-});
-
-function handleTextSelection() {
-    const selection = window.getSelection();
-    const text = selection.toString().trim();
-
-    // Se já existe botão, remove para atualizar posição ou sumir se não houver texto
-    if (selectionBtn) {
-        selectionBtn.remove();
-        selectionBtn = null;
-    }
-
-    if (!text || text.length === 0) return;
-
-    // Verifica se a seleção está dentro de um balão de chat (qualquer parte)
-    // selection.anchorNode pode ser um text node, por isso parentElement
-    const anchor = selection.anchorNode.nodeType === 3 ? selection.anchorNode.parentElement : selection.anchorNode;
-    const bubble = anchor.closest('.chat-bubble');
-    
-    if (!bubble) return;
-
-    // Cria o botão flutuante
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-
-    selectionBtn = document.createElement('button');
-    selectionBtn.className = 'fixed z-[9999] bg-[var(--primary-color)] hover:opacity-90 text-white px-3 py-1.5 rounded-full shadow-lg text-xs font-bold animate-in fade-in zoom-in duration-200 flex items-center gap-2 border border-white/20 select-none';
-    selectionBtn.innerHTML = '<i class="fas fa-volume-high"></i> Ouvir Seleção';
-    
-    // Posiciona acima da seleção, centralizado
-    // rect.top é relativo ao viewport
-    const top = rect.top - 40; 
-    const left = rect.left + (rect.width / 2) - 50; // -50 é metade da largura estimada do botão
-    
-    selectionBtn.style.top = `${Math.max(10, top)}px`;
-    selectionBtn.style.left = `${Math.max(10, left)}px`;
-
-    // Evita que o clique no botão desfaça a seleção imediatamente ou propague
-    selectionBtn.onmousedown = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        speakGeneric(text, null, selectionBtn);
-    };
-
-    document.body.appendChild(selectionBtn);
-}
-
-// Adicione esta função no chat.js
 
 async function requestReview(originalText) {
     if (!state.isAiRoom) return; // Só funciona em salas de IA
