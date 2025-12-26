@@ -39,7 +39,6 @@ export const DOMElements = {
     toastContainer: document.getElementById('toast-container'),
     
     // Botões
-    clearChatBtn: document.getElementById('clear-chat-btn'), // Novo: Botão de limpar conversa
     rewriteBtn: document.getElementById('rewrite-btn'),
     grammarBtn: document.getElementById('grammar-check-btn'),
     sendBtn: document.getElementById('send-btn'),
