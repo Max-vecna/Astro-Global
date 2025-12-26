@@ -60,13 +60,16 @@ export const DOMElements = {
     closeGrammarModalBtn: document.getElementById('close-grammar-modal'),
     closeGenericModalBtn: document.getElementById('close-generic-modal'),
     
-    // Seletores
+    // Seletores e Inputs de Configuração (NOVOS)
     roomLangSelector: document.getElementById('room-lang-selector'),
     roomLangContainer: document.getElementById('room-lang-container'),
     introLangSelector: document.getElementById('intro-lang-selector'),
     themeBtns: document.querySelectorAll('.theme-btn'),
     bubbleStyleSelector: document.getElementById('bubble-style-selector'),
     bgStyleSelector: document.getElementById('bg-style-selector'),
+    settingsNicknameInput: document.getElementById('settings-nickname-input'),
+    settingsLangSelector: document.getElementById('settings-lang-selector'),
+    roomClearChatBtn: document.getElementById('room-clear-chat-btn'), // Alterado de settingsClearChatBtn
     
     // Grammar Specifics
     grammarLoading: document.getElementById('grammar-loading'),

@@ -6,7 +6,7 @@ import { state } from './state.js';
 import { DOMElements } from './dom.js';
 import * as Utils from './utils.js';
 import * as Chat from './chat.js';
-import { ref, set, get, onValue, onChildAdded, onChildChanged, onDisconnect, query, orderByKey, update, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, set, get, onValue, onChildAdded, onChildChanged, onDisconnect, query, orderByKey, update, limitToLast, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 let presenceRef;
 
@@ -160,6 +160,35 @@ export const leaveRoom = async () => {
     state.currentRoom = null; 
     state.isAiRoom = false;
     Utils.switchScreen('lobby'); 
+};
+
+// NOVO: Função para limpar histórico da sala atual
+export const clearCurrentRoomHistory = async () => {
+    if (!state.currentRoom) return;
+
+    try {
+        // Remove todo o nó de mensagens da sala atual
+        await remove(ref(db, `messages/${state.currentRoom}`));
+        
+        // Limpa a tela localmente
+        DOMElements.messagesList.innerHTML = '';
+        DOMElements.messagesList.appendChild(DOMElements.typingIndicatorContainer);
+        
+        // Se for IA, pode ser legal mandar a mensagem de boas vindas de novo para não ficar vazio
+        if (state.isAiRoom) {
+            const welcomeMsg = {
+                userId: 'AI_BOT',
+                nickname: 'Astro Mentor',
+                text: `Memória reiniciada! Sobre o que quer falar agora?`,
+                timestamp: Date.now()
+            };
+            Chat.renderMessage(welcomeMsg, 'reset_msg');
+        }
+
+    } catch (e) {
+        console.error("Erro ao limpar histórico:", e);
+        Utils.showToast("Erro ao limpar histórico.", "error");
+    }
 };
 
 // --- Histórico de Salas ---

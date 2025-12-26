@@ -85,7 +85,7 @@
                 <h2 class="text-xl font-bold">Conversas</h2>
                 <div class="flex items-center gap-3">
                     <p class="text-sm">Olá, <span id="lobby-nickname" class="font-bold text-[var(--primary-color)]"></span>!</p>
-                    <button id="change-nickname-btn" class="text-muted-color hover:text-text-color transition-colors"><i class="fas fa-edit"></i></button>
+                    <button id="change-nickname-btn" class="text-muted-color hover:text-text-color transition-colors" title="Sair / Trocar Conta"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </header>
             
@@ -146,6 +146,11 @@
                         <i class="fas fa-bell-slash"></i>
                     </button>
 
+                    <!-- NOVO: Botão Limpar Conversa (NA SALA) -->
+                    <button id="room-clear-chat-btn" class="text-[var(--text-muted-color)] hover:text-red-400 transition-colors p-1" title="Limpar Histórico da Sala">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+
                     <!-- Seletor de Idioma da Sala -->
                     <div class="flex items-center gap-2" id="room-lang-container">
                         <select id="room-lang-selector" title="Seu idioma pessoal para tradução">
@@ -161,6 +166,11 @@
                             <option value="ar">العربية</option>
                         </select>
                     </div>
+                    
+                    <!-- Botão de Configuração dentro do chat também -->
+                    <button id="chat-settings-btn" onclick="document.getElementById('settings-btn').click()" class="text-[var(--text-muted-color)] hover:text-[var(--text-color)] transition-colors p-1">
+                        <i class="fas fa-cog"></i>
+                    </button>
 
                     <div class="md:flex items-center -space-x-2 hidden" id="user-avatars-container"></div>
                 </div>
@@ -202,117 +212,158 @@
     
     <!-- Modals -->
     <div id="settings-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-        <div class="glassmorphism p-6 rounded-2xl max-w-sm w-full flex flex-col gap-4 my-auto">
-            <div class="flex justify-between items-center">
-                 <h3 class="text-xl font-bold">Configurações</h3>
-                 <button id="close-settings-modal-btn" class="text-2xl text-muted-color hover:text-text-color">&times;</button>
-            </div>
-            
-            <!-- Tema Light/Dark -->
-            <div>
-                <label class="text-sm font-medium text-muted-color mb-2 block">Tema do App</label>
-                <div class="flex gap-3">
-                    <button data-theme="dark" class="theme-btn flex-1 p-3 rounded-xl border-2 border-transparent bg-slate-800 text-white flex flex-col items-center gap-1 transition-all">
-                        <i class="fas fa-moon"></i> Dark
-                    </button>
-                    <button data-theme="light" class="theme-btn flex-1 p-3 rounded-xl border-2 border-transparent bg-slate-200 text-black flex flex-col items-center gap-1 transition-all">
-                        <i class="fas fa-sun"></i> Light
-                    </button>
-                </div>
+        <div class="glassmorphism p-0 rounded-2xl max-w-md w-full flex flex-col my-auto overflow-hidden max-h-[90vh]">
+            <!-- Header do Modal -->
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-black/20 shrink-0">
+                 <h3 class="text-lg font-bold flex items-center gap-2"><i class="fas fa-sliders-h text-[var(--primary-color)]"></i> Configurações</h3>
+                 <button id="close-settings-modal-btn" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">&times;</button>
             </div>
 
-            <!-- Estilo do Fundo (NOVO) -->
-             <div>
-                <label class="text-sm font-medium text-muted-color mb-2 block">Plano de Fundo</label>
-                <div class="relative">
-                    <select id="bg-style-selector" class="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-color)] text-white cursor-pointer appearance-none">
-                        <option value="cosmos">✨ Cosmos (Animado)</option>
-                        <option value="deep">🌑 Deep Space (Sólido)</option>
-                        <option value="sunset">🌅 Sunset (Gradiente)</option>
-                        <option value="matrix">💻 Matrix (Cyber Grid)</option>
-                        <option value="aurora">🌌 Aurora</option>
-                        <option value="grid">🟤 Minimal Grid</option>
-                        <option value="nebula">🌌 Nebula (Animado)</option>
-                        <option value="ocean">🌊 Ocean Wave</option>
-                        <option value="cybergrid">🧬 Cyber Grid</option>
-                    </select>
-                    <i class="fas fa-image absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                </div>
-            </div>
-
-            <!-- FUNDO DO CHAT -->
-            <div>
-                <label class="text-sm font-medium text-muted-color mb-2 block">
-                    Fundo do Chat
-                </label>
-
-                <select id="chat-bg-selector" class="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-color)] text-white cursor-pointer appearance-none"">
-                    <option value="cartoon">🎨 Cartoon</option>
-                    <option value="whatsapp">💬 WhatsApp</option>
-                    <option value="whatsapp-light">💭 WhatsApp Claro</option>
-                    <option value="nebula">🌌 Nebulosa</option>
-                    <option value="glass">🧊 Vidro</option>
-                    <option value="grid">🔲 Grade</option>
-                    <option value="gradient">🌈 Gradiente</option>
-                    <option value="dark">🌑 Escuro</option>
-                    <option value="light">☀️ Claro</option>
-                </select>
-            </div>
-
-            <!-- Estilo dos Balões -->
-            <div>
-                <label class="text-sm font-medium text-muted-color mb-2 block">Estilo dos Balões</label>
-                <div class="relative">
-                    <select id="bubble-style-selector" class="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-[var(--primary-color)] text-white cursor-pointer appearance-none">
-                        <option value="astro">✨ Astro Original</option>
-                        <option value="modern">🔵 Moderno</option>
-                        <option value="cyber">🤖 Cyberpunk</option>
-                        <option value="neon">⚡ Neon Glow (Novo)</option>
-                        <option value="pixel">👾 Pixel Retro (Novo)</option>
-                        <option value="classic">💬 Clássico</option>
-                        <option value="soft">☁️ Soft</option>
-                        <option value="comic">💥 Comic</option>
-                        <option value="glass">🧊 Glass</option>
-                        <option value="paper">📄 Paper</option>
-                        <option value="terminal">💻 Terminal</option>
-                        <option value="rpg">⚔️ RPG Medieval</option>
-                        <option value="bubblegum">🍭 Bubble Gum</option>
-                        <option value="brutalist">🏁 Brutalista</option>
-                        <option value="hologram">💎 Holograma</option>
-                    </select>
-                    <i class="fas fa-paint-brush absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                </div>
+            <div class="p-6 space-y-8 overflow-y-auto scroll-container">
                 
-                <!-- ÁREA DE VISUALIZAÇÃO (PREVIEW) NOVO -->
-                <div id="preview-background" class="mt-4 p-4 rounded-xl border border-white/10 relative overflow-hidden preview-bg" data-bg-style="cosmos">
-                    <p class="text-[10px] text-muted-color mb-3 text-center uppercase tracking-widest font-bold z-10 relative">
-                        Pré-visualização
-                    </p>
-
-                    <div class="flex flex-col gap-4 pointer-events-none z-10 relative">
-
-                        <!-- RECEBIDA -->
-                        <div class="message-wrapper items-start !mb-0">
-                            <div class="chat-bubble">
-                                <div class="translated-text">Olá! Tudo bem?</div>
-                                <div class="original-text">Hello! How are you?</div>
+                <!-- PARTE 1: PERFIL E IDIOMA -->
+                <section class="space-y-4">
+                    <div class="flex items-center gap-2 border-b border-white/5 pb-2 mb-4">
+                        <i class="fas fa-user-astronaut text-indigo-400"></i>
+                        <h4 class="text-xs font-bold text-muted-color uppercase tracking-widest">Perfil & Idioma</h4>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- Nickname -->
+                        <div>
+                            <label class="text-sm text-slate-400 mb-1 block">Apelido</label>
+                            <div class="relative">
+                                <i class="fas fa-signature absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                <input type="text" id="settings-nickname-input" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-2 pl-9 pr-3 text-white focus:ring-2 focus:ring-[var(--primary-color)] outline-none transition-all">
                             </div>
                         </div>
 
-                        <!-- ENVIADA -->
-                        <div class="message-wrapper items-end !mb-0">
-                            <div class="chat-bubble">
-                                <div class="translated-text">Tudo ótimo!</div>
+                        <!-- Idioma -->
+                        <div>
+                            <label class="text-sm text-slate-400 mb-1 block">Idioma da IA</label>
+                            <div class="relative">
+                                <i class="fas fa-language absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                                <select id="settings-lang-selector" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-2 pl-9 pr-3 text-white appearance-none cursor-pointer focus:ring-2 focus:ring-[var(--primary-color)] outline-none transition-all">
+                                    <option value="pt">🇧🇷 Português</option>
+                                    <option value="en">🇺🇸 English</option>
+                                    <option value="es">🇪🇸 Español</option>
+                                    <option value="fr">🇫🇷 Français</option>
+                                    <option value="de">🇩🇪 Deutsch</option>
+                                    <option value="it">🇮🇹 Italiano</option>
+                                    <option value="ja">🇯🇵 日本語</option>
+                                    <option value="zh">🇨🇳 中文</option>
+                                    <option value="ru">🇷🇺 Русский</option>
+                                    <option value="ar">🇸🇦 العربية</option>
+                                </select>
                             </div>
                         </div>
                     </div>
+                </section>
+
+                <!-- PARTE 2: VISUALIZAÇÃO -->
+                <section class="space-y-4">
+                    <div class="flex items-center gap-2 border-b border-white/5 pb-2 mb-4">
+                        <i class="fas fa-palette text-pink-400"></i>
+                        <h4 class="text-xs font-bold text-muted-color uppercase tracking-widest">Aparência</h4>
+                    </div>
+
+                    <!-- Tema -->
+                    <div class="flex gap-2">
+                        <button data-theme="dark" class="theme-btn flex-1 p-3 rounded-xl border border-transparent bg-slate-800 text-white flex items-center justify-center gap-2 hover:bg-slate-700 transition-all">
+                            <i class="fas fa-moon"></i> Dark
+                        </button>
+                        <button data-theme="light" class="theme-btn flex-1 p-3 rounded-xl border border-transparent bg-slate-200 text-black flex items-center justify-center gap-2 hover:bg-slate-300 transition-all">
+                            <i class="fas fa-sun"></i> Light
+                        </button>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Selectors Grouped -->
+                         <div>
+                            <label class="text-sm text-slate-400 mb-1 block">Fundo do App</label>
+                            <select id="bg-style-selector" class="w-full p-2.5 bg-slate-900/50 border border-slate-700 rounded-xl outline-none text-white text-sm focus:ring-2 focus:ring-[var(--primary-color)]">
+                                <option value="cosmos">✨ Cosmos (Animado)</option>
+                                <option value="deep">🌑 Deep Space (Sólido)</option>
+                                <option value="sunset">🌅 Sunset (Gradiente)</option>
+                                <option value="matrix">💻 Matrix (Cyber Grid)</option>
+                                <option value="aurora">🌌 Aurora</option>
+                                <option value="grid">🟤 Minimal Grid</option>
+                                <option value="nebula">🌌 Nebula (Animado)</option>
+                                <option value="ocean">🌊 Ocean Wave</option>
+                                <option value="cybergrid">🧬 Cyber Grid</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-sm text-slate-400 mb-1 block">Fundo do Chat</label>
+                            <select id="chat-bg-selector" class="w-full p-2.5 bg-slate-900/50 border border-slate-700 rounded-xl outline-none text-white text-sm focus:ring-2 focus:ring-[var(--primary-color)]">
+                                <option value="cartoon">🎨 Cartoon</option>
+                                <option value="whatsapp">💬 WhatsApp</option>
+                                <option value="whatsapp-light">💭 WhatsApp Claro</option>
+                                <option value="nebula">🌌 Nebulosa</option>
+                                <option value="glass">🧊 Vidro</option>
+                                <option value="grid">🔲 Grade</option>
+                                <option value="gradient">🌈 Gradiente</option>
+                                <option value="dark">🌑 Escuro</option>
+                                <option value="light">☀️ Claro</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-sm text-slate-400 mb-1 block">Estilo dos Balões</label>
+                            <select id="bubble-style-selector" class="w-full p-2.5 bg-slate-900/50 border border-slate-700 rounded-xl outline-none text-white text-sm focus:ring-2 focus:ring-[var(--primary-color)]">
+                                <option value="astro">✨ Astro Original</option>
+                                <option value="modern">🔵 Moderno</option>
+                                <option value="cyber">🤖 Cyberpunk</option>
+                                <option value="neon">⚡ Neon Glow</option>
+                                <option value="pixel">👾 Pixel Retro</option>
+                                <option value="classic">💬 Clássico</option>
+                                <option value="soft">☁️ Soft</option>
+                                <option value="comic">💥 Comic</option>
+                                <option value="glass">🧊 Glass</option>
+                                <option value="paper">📄 Paper</option>
+                                <option value="terminal">💻 Terminal</option>
+                                <option value="rpg">⚔️ RPG Medieval</option>
+                                <option value="bubblegum">🍭 Bubble Gum</option>
+                                <option value="brutalist">🏁 Brutalista</option>
+                                <option value="hologram">💎 Holograma</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- PREVIEW AREA RESTORED -->
+                    <div id="preview-background" class="mt-2 p-4 rounded-xl border border-white/10 relative overflow-hidden h-32 flex flex-col justify-center gap-3" data-bg-style="cosmos">
+                         <!-- Mock Header for Preview context -->
+                         <div class="absolute top-0 left-0 right-0 h-1 bg-white/10"></div>
+                         
+                        <div class="message-wrapper items-start !mb-0 scale-90 origin-left">
+                            <div class="chat-bubble">
+                                <div class="translated-text text-xs">Olá! Visualizando...</div>
+                            </div>
+                        </div>
+
+                        <div class="message-wrapper items-end !mb-0 scale-90 origin-right">
+                            <div class="chat-bubble">
+                                <div class="translated-text text-xs">Ficou ótimo!</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- PARTE 3: GERENCIAMENTO -->
+                <section class="space-y-3 pt-4 border-t border-white/5">
+                    <h4 class="text-xs font-bold text-muted-color uppercase tracking-widest pb-1">Gerenciamento</h4>
+                    
+                    <!-- Botão Limpar removido daqui -->
+
+                    <button id="clear-data-btn" class="w-full p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 flex items-center justify-center gap-2 transition-all font-bold text-sm">
+                        <i class="fas fa-power-off"></i> Resetar Tudo (Logout)
+                    </button>
+                </section>
+                
+                <div class="text-center text-[10px] text-slate-600">
+                    Astro Chat v2.2 • Global Edition
                 </div>
-            </div>
-            
-            <div class="border-t border-white/10 pt-4">
-                <button id="clear-data-btn" class="w-full p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 flex items-center justify-center gap-2 transition-all font-bold text-sm">
-                    <i class="fas fa-trash-alt"></i> Limpar Dados / Sair
-                </button>
             </div>
         </div>
     </div>

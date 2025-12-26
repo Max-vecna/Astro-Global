@@ -131,7 +131,41 @@ DOMElements.saveNicknameBtn.onclick = async () => {
 };
 
 DOMElements.changeNicknameBtn.onclick = () => { localStorage.removeItem('astroNickname'); location.reload(); };
-DOMElements.clearDataBtn.onclick = () => { if(confirm('Tem certeza?')) { localStorage.clear(); location.reload(); } };
+
+// NOVO: Ação do botão de limpar conversa (agora no header da sala)
+DOMElements.roomClearChatBtn.onclick = async () => {
+    if (!state.currentRoom) {
+        Utils.showToast("Você não está em nenhuma sala.", "error");
+        return;
+    }
+
+    if (confirm("Isso apagará todas as mensagens atuais da sala/IA para você. Continuar?")) {
+        await Room.clearCurrentRoomHistory();
+        Utils.showToast("Conversa limpa!", "success");
+    }
+};
+
+// NOVO: Salvar Nickname ao perder foco (Blur) no modal
+DOMElements.settingsNicknameInput.addEventListener('blur', async (e) => {
+    const newVal = e.target.value.trim();
+    if (newVal && newVal !== state.nickname) {
+        state.nickname = newVal;
+        localStorage.setItem('astroNickname', newVal);
+        DOMElements.lobbyNickname.textContent = newVal;
+        await Room.updateNicknameHistory(newVal);
+        Utils.showToast("Apelido atualizado!", "success");
+    }
+});
+
+// NOVO: Mudar idioma global no modal
+DOMElements.settingsLangSelector.addEventListener('change', (e) => {
+    const newVal = e.target.value;
+    state.currentTranslationLangGlobal = newVal;
+    localStorage.setItem('astroUserLangGlobal', newVal);
+    Utils.showToast("Idioma da IA atualizado!", "success");
+});
+
+DOMElements.clearDataBtn.onclick = () => { if(confirm('Isso apagará todos os seus dados e reiniciará o app. Continuar?')) { localStorage.clear(); location.reload(); } };
 DOMElements.notifBtn.onclick = Utils.unlockAudioAndRequestPermission;
 document.body.addEventListener('click', () => { if(!state.audioUnlocked) Utils.unlockAudioAndRequestPermission(); }, { once: true });
 
@@ -163,7 +197,17 @@ DOMElements.modalConfirmJoinBtn.onclick = () => {
     } 
 };
 
-DOMElements.settingsBtn.onclick = () => { DOMElements.settingsModal.classList.remove('hidden'); DOMElements.settingsModal.classList.add('flex'); };
+// Abrir Modal de Configurações e Popular Dados
+DOMElements.settingsBtn.onclick = () => { 
+    // Popular inputs com valores atuais
+    if (state.nickname) DOMElements.settingsNicknameInput.value = state.nickname;
+    if (state.currentTranslationLangGlobal) DOMElements.settingsLangSelector.value = state.currentTranslationLangGlobal;
+    else DOMElements.settingsLangSelector.value = "pt"; // Default fallback
+
+    DOMElements.settingsModal.classList.remove('hidden'); 
+    DOMElements.settingsModal.classList.add('flex'); 
+};
+
 DOMElements.closeSettingsModalBtn.onclick = () => { DOMElements.settingsModal.classList.add('hidden'); DOMElements.settingsModal.classList.remove('flex'); };
 
 DOMElements.themeBtns.forEach(btn => btn.onclick = () => { localStorage.setItem('astroTheme', btn.dataset.theme); location.reload(); });
