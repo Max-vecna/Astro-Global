@@ -6,12 +6,18 @@ import { state } from './state.js';
 import { DOMElements } from './dom.js';
 import * as Utils from './utils.js';
 import * as Chat from './chat.js';
-import { ref, set, get, onValue, onChildAdded, onChildChanged, onDisconnect, query, orderByKey, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, set, get, onValue, onChildAdded, onChildChanged, onDisconnect, query, orderByKey, update, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 let presenceRef;
 
 // --- Presença ---
 export const initializePresence = () => {
+    // Se for sala de IA, não precisamos de presença online real
+    if (state.isAiRoom) {
+        DOMElements.userCountDisplay.textContent = "Astro Mentor Online";
+        return;
+    }
+
     presenceRef = ref(db, `presence/${state.currentRoom}/${state.userId}`);
     set(presenceRef, { nickname: state.nickname, isOnline: true });
     onDisconnect(presenceRef).update({ isOnline: false });
@@ -49,28 +55,76 @@ export const joinRoom = async (roomCode, name) => {
     if (!roomCode) return;
     
     state.currentRoom = roomCode;
+    state.isAiRoom = false; // Reset flag
 
-    const roomSnap = await get(ref(db, `rooms/${roomCode}`));
-    const roomData = roomSnap.exists() ? roomSnap.val() : null;
-
-    if (roomData?.name) {
-        DOMElements.roomNameDisplay.textContent = roomData.name;
-    } else {
-        DOMElements.roomNameDisplay.textContent = `#${roomCode}`;
-    }
-
+    DOMElements.roomLangContainer.style.display = 'flex'; // Mostra seletor de idioma normal
+    DOMElements.roomNameDisplay.textContent = `#${roomCode}`;
+    
+    // Tenta pegar nome da sala
+    try {
+        const roomSnap = await get(ref(db, `rooms/${roomCode}`));
+        const roomData = roomSnap.exists() ? roomSnap.val() : null;
+        if (roomData?.name) DOMElements.roomNameDisplay.textContent = roomData.name;
+    } catch(e) {}
 
     updateRecentRooms(roomCode);
-    Utils.switchScreen('chat');
+    finalizeJoin(roomCode);
+};
+
+export const joinAiRoom = async () => {
+    await cleanupRoomListeners();
     
-    DOMElements.roomCodeDisplay.textContent = roomCode;
+    // Cria um ID único para a sala privada com a IA
+    const aiRoomId = `AI_MENTOR_${state.userId}`;
+    state.currentRoom = aiRoomId;
+    state.isAiRoom = true;
+
+    DOMElements.roomNameDisplay.textContent = "Mentor IA";
+    DOMElements.roomCodeDisplay.textContent = "Modo Estudo";
+    DOMElements.userCountDisplay.textContent = "IA Online";
+    DOMElements.roomLangContainer.style.display = 'none'; // Esconde seletor de tradução
+    
+    Utils.switchScreen('chat');
     
     DOMElements.messagesList.innerHTML = '';
     DOMElements.messagesList.appendChild(DOMElements.typingIndicatorContainer);
     
+    // Listeners do Firebase (para persistir conversa com a IA)
+    // Usamos limitToLast para não carregar histórico infinito se houver
+    const messagesRef = query(ref(db, `messages/${state.currentRoom}`), orderByKey(), limitToLast(50));
+    const unsubMessages = onChildAdded(messagesRef, s => {
+        const data = s.val(); 
+        Chat.renderMessage(data, s.key);
+    });
+    
+    const unsubTyping = onValue(ref(db, `typing/${state.currentRoom}`), snapshot => {
+        const typingUsers = snapshot.val() || {}; 
+        delete typingUsers[state.userId]; 
+        Chat.renderTypingIndicator(typingUsers);
+    });
+    
+    state.roomUnsubscribes.push(unsubTyping, unsubMessages);
+
+    // Boas vindas se for vazio
+    const snap = await get(messagesRef);
+    if (!snap.exists()) {
+        const welcomeMsg = {
+            userId: 'AI_BOT',
+            nickname: 'Astro Mentor',
+            text: `Olá, ${state.nickname}! Sou seu mentor pessoal. Vamos conversar? Posso te ajudar a praticar idiomas ou tirar dúvidas. Fale comigo normalmente!`,
+            timestamp: Date.now()
+        };
+        Chat.renderMessage(welcomeMsg, 'welcome_msg');
+    }
+};
+
+const finalizeJoin = (roomCode) => {
+    Utils.switchScreen('chat');
+    DOMElements.roomCodeDisplay.textContent = roomCode;
+    DOMElements.messagesList.innerHTML = '';
+    DOMElements.messagesList.appendChild(DOMElements.typingIndicatorContainer);
     initializePresence();
     
-    // Listeners do Firebase
     const messagesRef = query(ref(db, `messages/${state.currentRoom}`), orderByKey());
     const unsubMessages = onChildAdded(messagesRef, s => {
         const data = s.val(); 
@@ -92,7 +146,8 @@ export const joinRoom = async (roomCode, name) => {
     });
     
     state.roomUnsubscribes.push(unsubPresence, unsubTyping, unsubMessages, unsubChanged);
-};
+}
+
 
 export const cleanupRoomListeners = async () => {
     if (presenceRef) await set(presenceRef, null);
@@ -103,6 +158,7 @@ export const cleanupRoomListeners = async () => {
 export const leaveRoom = async () => { 
     await cleanupRoomListeners(); 
     state.currentRoom = null; 
+    state.isAiRoom = false;
     Utils.switchScreen('lobby'); 
 };
 

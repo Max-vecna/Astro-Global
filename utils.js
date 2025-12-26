@@ -75,6 +75,9 @@ export async function unlockAudioAndRequestPermission() {
 export function checkAndNotify(msgData) {
     const isNew = msgData.timestamp > state.loadTime;
     const isOther = msgData.userId !== state.userId;
+    // Em sala de IA, não notificamos via push browser se for o proprio usuario,
+    // mas se for a IA (Astro Mentor) podemos notificar
+    
     if (isNew && isOther) {
         if (state.audioUnlocked) try { notificationAudio.play().catch(e => {}); } catch(e) {}
         if (document.hidden && "serviceWorker" in navigator) {

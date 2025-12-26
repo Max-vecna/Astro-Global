@@ -3,6 +3,7 @@
 
 export const state = {
     currentRoom: null,
+    isAiRoom: false, // Nova flag para identificar sala de IA
     nickname: localStorage.getItem('astroNickname'),
     userId: null,
     loadTime: Date.now(),

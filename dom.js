@@ -45,6 +45,7 @@ export const DOMElements = {
     leaveBtn: document.getElementById('leave-btn'),
     notifBtn: document.getElementById('notif-btn'),
     newConversationBtn: document.getElementById('new-conversation-btn'),
+    aiRoomBtn: document.getElementById('ai-room-btn'), // Novo: Botão Sala IA
     settingsBtn: document.getElementById('settings-btn'),
     saveNicknameBtn: document.getElementById('save-nickname-btn'),
     changeNicknameBtn: document.getElementById('change-nickname-btn'),
@@ -61,6 +62,7 @@ export const DOMElements = {
     
     // Seletores
     roomLangSelector: document.getElementById('room-lang-selector'),
+    roomLangContainer: document.getElementById('room-lang-container'),
     introLangSelector: document.getElementById('intro-lang-selector'),
     themeBtns: document.querySelectorAll('.theme-btn'),
     bubbleStyleSelector: document.getElementById('bubble-style-selector'),

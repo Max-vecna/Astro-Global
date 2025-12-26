@@ -55,6 +55,9 @@ DOMElements.messageInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = (this.scrollHeight) + 'px';
     
+    // Na sala IA, não enviamos "typing" para outros usuários, apenas local ou mockado se quisessemos
+    if (state.isAiRoom) return;
+
     const typingRef = ref(db, `typing/${state.currentRoom}/${state.userId}`);
     if (this.value) {
         set(typingRef, { nickname: state.nickname, text: this.value.substring(0, 60) });
@@ -134,6 +137,9 @@ document.body.addEventListener('click', () => { if(!state.audioUnlocked) Utils.u
 
 // Modals Triggers
 DOMElements.newConversationBtn.onclick = () => { DOMElements.roomActionsModal.classList.remove('hidden'); DOMElements.roomActionsModal.classList.add('flex'); };
+// Evento para o botão de Sala IA (NOVO)
+DOMElements.aiRoomBtn.onclick = Room.joinAiRoom;
+
 DOMElements.closeRoomActionsModalBtn.onclick = () => { DOMElements.roomActionsModal.classList.add('hidden'); DOMElements.roomActionsModal.classList.remove('flex'); };
 
 DOMElements.modalCreateRoomBtn.onclick = async () => {
@@ -162,7 +168,10 @@ DOMElements.closeSettingsModalBtn.onclick = () => { DOMElements.settingsModal.cl
 
 DOMElements.themeBtns.forEach(btn => btn.onclick = () => { localStorage.setItem('astroTheme', btn.dataset.theme); location.reload(); });
 DOMElements.leaveBtn.onclick = Room.leaveRoom;
-DOMElements.roomCodeDisplay.onclick = () => { navigator.clipboard.writeText(state.currentRoom); Utils.showToast("Código copiado!"); };
+DOMElements.roomCodeDisplay.onclick = () => { 
+    if (state.isAiRoom) return;
+    navigator.clipboard.writeText(state.currentRoom); Utils.showToast("Código copiado!"); 
+};
 
 // Fechamento de Modals
 DOMElements.closeStudyModalBtn.onclick = () => { DOMElements.studyModal.classList.add('hidden'); DOMElements.studyModal.classList.remove('flex'); };
